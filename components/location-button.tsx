@@ -32,7 +32,7 @@ export function LocationButton({
       className={`h-10 ${
         variant === "outline"
           ? "border-teal-300 text-teal-700 hover:bg-teal-50"
-          : "bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white"
+          : "rounded-md bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white"
       } ${className}`}
     >
       {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <span className="mr-2">{icon}</span>}

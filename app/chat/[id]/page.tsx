@@ -453,6 +453,7 @@ Perfect! I've found and saved your location. Now you can discover the magnificen
   };
 
   const exploreSurrounding = async () => {
+    await getCurrentLocation();
     let locationToUse = currentLocation;
 
     if (!locationToUse) {
@@ -962,12 +963,13 @@ Would you like to know more about the craftsmanship process or the symbolic mean
           <div className="space-y-3">
             <div className="flex gap-2">
               <LocationButton
-                onClick={getCurrentLocation}
-                isLoading={isLocating}
-                icon={<MapPin className="w-3 h-3 sm:w-4 sm:h-4" />}
-                text={currentLocation ? "Update Location" : "Locate Me"}
-                variant="outline"
-                className="flex-1 border-red-300 text-red-700 hover:bg-red-50 text-xs sm:text-sm"
+                onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+                isLoading={false}
+                text="Upload Photo"
+                icon={<ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />}
+                variant="default"
+                disabled={false}
+                className="rounded-md flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
               />
               <LocationButton
                 onClick={exploreSurrounding}
@@ -975,7 +977,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 icon={<Navigation className="w-3 h-3 sm:w-4 sm:h-4" />}
                 text="Explore Surrounding"
                 variant="default"
-                className="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
+                className="rounded-md flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
                 disabled={false}
               />
             </div>
@@ -989,14 +991,6 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                   className="pr-10 sm:pr-12 bg-white/90 border-2 border-rose-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-200 rounded-xl text-sm sm:text-base h-10 sm:h-12"
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 />
-                <Button
-                  onClick={() => setShowPhotoMenu(!showPhotoMenu)}
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1 h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-rose-100 rounded-lg"
-                >
-                  <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4 text-rose-600" />
-                </Button>
               </div>
 
               <Button
