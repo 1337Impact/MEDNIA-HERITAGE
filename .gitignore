@@ -1,0 +1,3 @@
+backend/.env
+backend/chat_messages.db
+backend/.venv
