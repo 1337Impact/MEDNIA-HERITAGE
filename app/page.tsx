@@ -1,483 +1,240 @@
-"use client"
+"use client";
 
-import type React from "react"
+import Link from "next/link";
+import {
+  Camera,
+  Navigation2,
+  LandmarkIcon,
+  MapPin,
+  Globe2,
+  Clock,
+  Info,
+  ChefHat,
+  History,
+  Star,
+  MapIcon,
+} from "lucide-react";
 
-import { useState, useRef, useCallback } from "react"
-import { Camera, Send, ImageIcon, X, Sparkles, MapPin, Navigation } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { GeometricLoader } from "@/components/geometric-loader"
-import { ChatMessage } from "@/components/chat-message"
-import { PhotoMenu } from "@/components/photo-menu"
-import { LocationButton } from "@/components/location-button"
-
-interface Message {
-  id: string
-  type: "user" | "assistant"
-  content: string
-  image?: string
-  timestamp: Date
-  heritageInfo?: {
-    title: string
-    period: string
-    description: string
-    significance: string
-    location: string
-    tips: string[]
-    relatedElements: string[]
-    confidence: number
-  }
-}
-
-interface LocationData {
-  latitude: number
-  longitude: number
-  accuracy: number
-}
-
-export default function MedinaGuide() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      type: "assistant",
-      content:
-        "مرحبا! Welcome to your personal Medina heritage guide. Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🏛️",
-      timestamp: new Date(),
-    },
-  ])
-  const [inputValue, setInputValue] = useState("")
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
-  const [showCamera, setShowCamera] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
-  const [isLocating, setIsLocating] = useState(false)
-
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const addMessage = (message: Omit<Message, "id" | "timestamp">) => {
-    const newMessage: Message = {
-      ...message,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, newMessage])
-    setTimeout(scrollToBottom, 100)
-  }
-
-  const getCurrentLocation = useCallback(async () => {
-    setIsLocating(true)
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        })
-      })
-
-      const locationData: LocationData = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      }
-
-      setCurrentLocation(locationData)
-
-      addMessage({
-        type: "assistant",
-        content: `📍 **Location Found!**
-
-**Coordinates:** ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}
-**Accuracy:** ±${Math.round(locationData.accuracy)}m
-
-I've pinpointed your location! Now you can explore the heritage sites around you. Click "Explore Surrounding" to discover what historical treasures are nearby! 🗺️`,
-      })
-    } catch (error) {
-      let errorMessage = "I couldn't access your location. "
-
-      if (error instanceof GeolocationPositionError) {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage += "Please enable location permissions in your browser settings."
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage += "Location information is unavailable."
-            break
-          case error.TIMEOUT:
-            errorMessage += "Location request timed out. Please try again."
-            break
-        }
-      }
-
-      addMessage({
-        type: "assistant",
-        content: `❌ ${errorMessage}
-
-You can still use the app by taking photos of heritage elements around you! 📸`,
-      })
-    } finally {
-      setIsLocating(false)
-    }
-  }, [])
-
-  const exploreSurrounding = useCallback(async () => {
-    if (!currentLocation) {
-      addMessage({
-        type: "assistant",
-        content: "Please use 'Locate Me' first to find heritage sites around you! 📍",
-      })
-      return
-    }
-
-    setIsAnalyzing(true)
-
-    addMessage({
-      type: "assistant",
-      content: "🔍 Searching for heritage sites around you...",
-    })
-
-    // Simulate API call to heritage database
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // Mock heritage sites near Fes medina (you would replace this with real API data)
-    const nearbyHeritage = [
-      {
-        name: "Bab Boujloud (Blue Gate)",
-        distance: "150m",
-        direction: "Northeast",
-        period: "1913 (Alaouite Dynasty)",
-        description: "The iconic blue and green tiled gateway to Fes el-Bali",
-      },
-      {
-        name: "Al-Attarine Madrasa",
-        distance: "300m",
-        direction: "East",
-        period: "1323-1325 (Marinid Dynasty)",
-        description: "Exquisite example of Marinid architecture with intricate zellige work",
-      },
-      {
-        name: "Chouara Tannery",
-        distance: "450m",
-        direction: "Southeast",
-        period: "11th Century",
-        description: "One of the oldest leather tanneries in the world, still operating today",
-      },
-    ]
-
-    const heritageList = nearbyHeritage
-      .map(
-        (site) =>
-          `🏛️ **${site.name}**
-📏 ${site.distance} ${site.direction}
-📅 ${site.period}
-${site.description}`,
-      )
-      .join("\n\n")
-
-    addMessage({
-      type: "assistant",
-      content: `🗺️ **Heritage Sites Near You**
-
-${heritageList}
-
-Take a photo of any of these sites or their architectural details to learn more about their history and significance! You can also ask me specific questions about what you see. 📸✨`,
-    })
-
-    setIsAnalyzing(false)
-  }, [currentLocation])
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        setShowCamera(true)
-        setShowPhotoMenu(false)
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error)
-    }
-  }, [])
-
-  const stopCamera = useCallback(() => {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-      tracks.forEach((track) => track.stop())
-    }
-    setShowCamera(false)
-  }, [])
-
-  const capturePhoto = useCallback(() => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      const ctx = canvas.getContext("2d")
-      if (ctx) {
-        ctx.drawImage(video, 0, 0)
-        const imageData = canvas.toDataURL("image/jpeg")
-        stopCamera()
-
-        addMessage({
-          type: "user",
-          content: "What can you tell me about this?",
-          image: imageData,
-        })
-
-        analyzeImage(imageData)
-      }
-    }
-  }, [stopCamera])
-
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string
-        setShowPhotoMenu(false)
-
-        addMessage({
-          type: "user",
-          content: "What can you tell me about this?",
-          image: imageData,
-        })
-
-        analyzeImage(imageData)
-      }
-      reader.readAsDataURL(file)
-    }
-  }, [])
-
-  const analyzeImage = async (imageData: string) => {
-    setIsAnalyzing(true)
-
-    const loadingMessage: Message = {
-      id: "loading",
-      type: "assistant",
-      content: "Analyzing your photo...",
-      timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, loadingMessage])
-
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    setMessages((prev) => prev.filter((msg) => msg.id !== "loading"))
-
-    const mockHeritageInfo = {
-      title: "Zellige Tilework",
-      period: "10th Century - Present",
-      description:
-        "This is a beautiful example of traditional Moroccan zellige tilework. Each tile is hand-cut from clay and glazed in vibrant colors, creating intricate geometric patterns that have adorned Moroccan architecture for over a millennium.",
-      significance:
-        "These geometric patterns reflect Islamic artistic principles, avoiding figurative representation while creating infinite, meditative designs that symbolize the unity and continuity of creation.",
-      location: "Found throughout Moroccan palaces, mosques, and traditional houses",
-      tips: [
-        "Notice how each tile is slightly different - they're all hand-cut",
-        "The patterns create optical illusions of movement",
-        "This blue and white combination is called 'Fassi' style",
-      ],
-      relatedElements: ["Tadelakt plaster", "Cedar wood carvings", "Horseshoe arches"],
-      confidence: 0.92,
-    }
-
-    addMessage({
-      type: "assistant",
-      content: `I can see this is **${mockHeritageInfo.title}** from the **${mockHeritageInfo.period}**! 
-
-${mockHeritageInfo.description}
-
-**Cultural Significance:**
-${mockHeritageInfo.significance}
-
-**What to look for:**
-${mockHeritageInfo.tips.map((tip) => `• ${tip}`).join("\n")}
-
-Would you like to know more about any specific aspect of this tilework? 🎨`,
-      heritageInfo: mockHeritageInfo,
-    })
-
-    setIsAnalyzing(false)
-  }
-
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      addMessage({
-        type: "user",
-        content: inputValue,
-      })
-
-      setTimeout(() => {
-        addMessage({
-          type: "assistant",
-          content:
-            "That's a great question! I'd be happy to help you learn more about Moroccan heritage. Feel free to share a photo of any architectural element you'd like to explore, or ask me about specific aspects of what you've already discovered. 🏛️",
-        })
-      }, 1000)
-
-      setInputValue("")
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden">
-      {/* Zellige Background */}
-      <div
-        className="absolute inset-0 opacity-15"
-        style={{
-          backgroundImage: `url('/images/zellige-patter.png')`,
-          backgroundSize: "400px 400px",
-          backgroundRepeat: "repeat",
-          backgroundPosition: "center",
-        }}
-      />
-
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-teal-800/80 to-green-900/80" />
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-moroccan-terracotta/5 to-moroccan-gold/10">
+      {/* Traditional Pattern Overlay */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-10 moroccan-pattern" />
 
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-teal-200 relative z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
+      <header className="flex items-center justify-between border-b border-solid border-moroccan-brown/20 px-4 py-3 md:px-6 lg:px-10">
+        <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-blue-600 rounded-full flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
+              <LandmarkIcon className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Heritage Guide</h1>
-              <p className="text-sm text-gray-600">Your AI Medina companion</p>
-            </div>
+            <h1 className="text-lg md:text-xl font-bold text-gray-900">
+              Medina Navigator
+            </h1>
           </div>
+          <Link
+            href="/chat"
+            className="flex h-8 md:h-10 min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-3 md:px-4 bg-moroccan-terracotta text-white text-sm font-bold leading-normal tracking-[0.015em]"
+          >
+            Get Started
+          </Link>
         </div>
       </header>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 relative z-10">
-        <div className="max-w-md mx-auto space-y-4">
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
-          {isAnalyzing && (
-            <div className="flex justify-start">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 max-w-xs shadow-sm">
-                <GeometricLoader />
+      {/* Hero Section */}
+      <section className="relative pt-10">
+        <div className="mx-auto max-w-7xl px-6 py-12 md:py-24">
+          <div className="grid gap-12 md:grid-cols-2 md:gap-8">
+            <div className="flex flex-col justify-center">
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-6xl">
+                Discover the Hidden
+                <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  {" "}
+                  Treasures{" "}
+                </span>
+                of the Medina
+              </h1>
+              <p className="mb-8 text-lg text-gray-600 md:text-xl">
+                Your AI-powered guide to Morocco's rich cultural heritage. Snap
+                photos, explore history, and navigate traditional markets with
+                real-time insights.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/chat"
+                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-moroccan-terracotta text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
+                >
+                  <Camera className="h-5 w-5" />
+                  Start Exploring
+                </Link>
+                <button className="flex items-center gap-2 rounded-full border-2 border-orange-100 bg-white px-8 py-3 font-semibold text-orange-600 transition-all hover:border-orange-200 hover:bg-orange-50">
+                  <Info className="h-5 w-5" />
+                  Learn More
+                </button>
               </div>
             </div>
-          )}
-          <div ref={messagesEndRef} />
+            {/* Feature Cards */}
+            <div className="relative">
+              <div className="absolute inset-0 -left-4 -top-4 rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 blur-2xl" />
+              <div className="relative grid gap-4">
+                <div className="rounded-2xl border border-amber-100 bg-white/80 p-6 backdrop-blur-sm">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
+                    <Camera className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-gray-900">
+                    Instant Recognition
+                  </h3>
+                  <p className="text-gray-600">
+                    Take a photo of any architectural detail, craft, or landmark
+                    and get instant historical context
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-100 bg-white/80 p-6 backdrop-blur-sm">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100">
+                    <Navigation2 className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-gray-900">
+                    Smart Navigation
+                  </h3>
+                  <p className="text-gray-600">
+                    Discover nearby heritage sites, traditional food spots, and
+                    artisan workshops
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-100 bg-white/80 p-6 backdrop-blur-sm">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-100">
+                    <Globe2 className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-gray-900">
+                    Cultural Insights
+                  </h3>
+                  <p className="text-gray-600">
+                    Learn about local traditions, etiquette, and the stories
+                    behind every corner
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Camera View Overlay */}
-      {showCamera && (
-        <div className="absolute inset-0 bg-black z-50 flex flex-col">
-          <div className="flex-1 relative">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            <div className="absolute inset-4 border-2 border-white/30 rounded-lg pointer-events-none">
-              <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-white/60"></div>
-              <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-white/60"></div>
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-white/60"></div>
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-white/60"></div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-black/50 backdrop-blur-sm">
-            <div className="max-w-md mx-auto flex items-center justify-center gap-6">
-              <Button
-                onClick={stopCamera}
-                variant="outline"
-                size="lg"
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-              >
-                <X className="w-5 h-5 mr-2" />
-                Cancel
-              </Button>
-
-              <Button onClick={capturePhoto} size="lg" className="bg-white text-black hover:bg-gray-100 px-8">
-                <Camera className="w-5 h-5 mr-2" />
-                Capture
-              </Button>
+        {/* Features Grid */}
+        <div className="bg-gradient-to-b from-amber-50 to-orange-50 py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <h2 className="mb-12 text-center text-3xl font-bold text-gray-900 md:text-4xl">
+              Everything You Need to Explore the Medina
+            </h2>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: MapPin,
+                  title: "Location Aware",
+                  description:
+                    "Real-time updates about heritage sites and points of interest around you",
+                },
+                {
+                  icon: ChefHat,
+                  title: "Food Discovery",
+                  description:
+                    "Find authentic local cuisine and traditional food spots nearby",
+                },
+                {
+                  icon: History,
+                  title: "Historical Context",
+                  description:
+                    "Learn about the rich history and cultural significance of every location",
+                },
+                {
+                  icon: Star,
+                  title: "Local Recommendations",
+                  description:
+                    "Get insider tips and recommendations from local experts",
+                },
+                {
+                  icon: MapIcon,
+                  title: "Custom Routes",
+                  description:
+                    "Create personalized walking tours based on your interests",
+                },
+                {
+                  icon: Clock,
+                  title: "Real-Time Updates",
+                  description:
+                    "Stay informed about opening hours, prices, and crowd levels",
+                },
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className="group relative rounded-2xl border border-amber-100 bg-white p-6 transition-all hover:border-amber-200 hover:shadow-lg"
+                >
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 text-orange-600 group-hover:from-amber-100 group-hover:to-orange-100">
+                    <feature.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-gray-900">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{feature.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      )}
 
-      {/* Input Area */}
-      <div className="bg-white/95 backdrop-blur-sm border-t border-teal-200 p-4 relative z-10">
-        <div className="max-w-md mx-auto space-y-3">
-          {/* Location Buttons */}
-          <div className="flex gap-2">
-            <LocationButton
-              onClick={getCurrentLocation}
-              isLoading={isLocating}
-              icon={<MapPin className="w-4 h-4" />}
-              text="Locate Me"
-              variant="outline"
-              className="flex-1"
-            />
-            <LocationButton
-              onClick={exploreSurrounding}
-              isLoading={false}
-              icon={<Navigation className="w-4 h-4" />}
-              text="Explore Surrounding"
-              variant="default"
-              className="flex-1"
-              disabled={!currentLocation}
-            />
-          </div>
-
-          {/* Chat Input */}
-          <div className="flex items-end gap-3">
-            <div className="flex-1 relative">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask about Moroccan heritage..."
-                className="pr-12 bg-white/80 border-teal-200 focus:border-teal-400"
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              />
-              <Button
-                onClick={() => setShowPhotoMenu(!showPhotoMenu)}
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-teal-100"
-              >
-                <ImageIcon className="w-4 h-4 text-teal-600" />
-              </Button>
-            </div>
-
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim()}
-              className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white h-10 w-10 p-0"
+        {/* Footer CTA */}
+        <footer className="flex flex-col gap-6 px-5 py-10 text-center @container">
+          <div className="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around">
+            <Link
+              href="#"
+              className="text-moroccan-brown text-base font-normal leading-normal min-w-40"
             >
-              <Send className="w-4 h-4" />
-            </Button>
+              About Us
+            </Link>
+            <Link
+              href="#"
+              className="text-moroccan-brown text-base font-normal leading-normal min-w-40"
+            >
+              Contact
+            </Link>
+            <Link
+              href="#"
+              className="text-moroccan-brown text-base font-normal leading-normal min-w-40"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="#"
+              className="text-moroccan-brown text-base font-normal leading-normal min-w-40"
+            >
+              Terms of Service
+            </Link>
           </div>
-
-          {/* Photo Menu */}
-          <PhotoMenu
-            isOpen={showPhotoMenu}
-            onClose={() => setShowPhotoMenu(false)}
-            onTakePhoto={startCamera}
-            onUploadPhoto={() => fileInputRef.current?.click()}
-          />
-        </div>
-      </div>
-
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-      <canvas ref={canvasRef} className="hidden" />
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="#"
+              className="text-moroccan-brown hover:text-moroccan-terracotta"
+            >
+              <Camera className="h-5 w-5" />
+            </Link>
+            <Link
+              href="#"
+              className="text-moroccan-brown hover:text-moroccan-terracotta"
+            >
+              <Navigation2 className="h-5 w-5" />
+            </Link>
+            <Link
+              href="#"
+              className="text-moroccan-brown hover:text-moroccan-terracotta"
+            >
+              <Globe2 className="h-5 w-5" />
+            </Link>
+          </div>
+          <p className="text-moroccan-brown text-base font-normal leading-normal">
+            &copy; 2023 Medina Navigator. All rights reserved.
+          </p>
+        </footer>
+      </section>
     </div>
-  )
+  );
 }

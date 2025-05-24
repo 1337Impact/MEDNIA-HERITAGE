@@ -1,30 +1,112 @@
-# Medina heritage app
+# Medina Navigator
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+![Medina Navigator](public/images/zellige-pattern.png)
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/1337impact/v0-medina-heritage-app)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/faEBD5q73KH)
+Medina Navigator is an AI-powered guide that helps visitors explore and understand Morocco's rich cultural heritage. The application provides real-time insights, navigation assistance, and cultural information through an interactive interface.
 
-## Overview
+## Features
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+### 🔍 Instant Recognition
+- Take photos of architectural details, crafts, or landmarks
+- Get immediate historical context and cultural significance
+- AI-powered image analysis for accurate identification
 
-## Deployment
+### 🧭 Smart Navigation
+- Discover nearby heritage sites
+- Find traditional food spots and artisan workshops
+- Get real-time location-aware updates
+- Create personalized walking tours
 
-Your project is live at:
+### 🌍 Cultural Insights
+- Learn about local traditions and customs
+- Understand proper etiquette
+- Discover the stories behind historical sites
+- Get insider tips from local experts
 
-**[https://vercel.com/1337impact/v0-medina-heritage-app](https://vercel.com/1337impact/v0-medina-heritage-app)**
+### 🍳 Food Discovery
+- Find authentic local cuisine
+- Locate traditional food spots
+- Get recommendations for local delicacies
 
-## Build your app
+### ⏰ Real-Time Updates
+- Check opening hours
+- View current prices
+- Monitor crowd levels
+- Get live updates about points of interest
 
-Continue building your app on:
+## Technology Stack
 
-**[https://v0.dev/chat/projects/faEBD5q73KH](https://v0.dev/chat/projects/faEBD5q73KH)**
+- Next.js (React Framework)
+- TypeScript
+- Tailwind CSS
+- Lucide Icons
+- AI-powered image recognition
+- Geolocation services
 
-## How It Works
+## Getting Started
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/medina-navigator.git
+```
+
+2. Navigate to the project directory:
+```bash
+cd medina-navigator
+```
+
+3. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+4. Start the development server:
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+5. Open your browser and visit `http://localhost:3000`
+
+## Usage
+
+1. Click "Get Started" to begin exploring
+2. Use the camera feature to take photos of interesting architectural details
+3. Allow location access to discover nearby points of interest
+4. Follow the interactive guides and recommendations
+5. Explore the rich cultural heritage of the Medina
+
+## Contributing
+
+We welcome contributions to Medina Navigator! Please read our contributing guidelines before submitting pull requests.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+
+- Website: [medinanavigator.com](https://medinanavigator.com)
+- Email: contact@medinanavigator.com
+
+## Acknowledgments
+
+- Thanks to all contributors who have helped shape Medina Navigator
+- Special thanks to the local experts and historians who provided cultural insights
+- Moroccan artisans and craftspeople who preserve these beautiful traditions
