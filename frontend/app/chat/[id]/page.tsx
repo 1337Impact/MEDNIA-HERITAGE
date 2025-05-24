@@ -19,6 +19,7 @@ import { ChatMessage } from "@/app/components/chat-message";
 import { RouteCard } from "@/app/components/route-card";
 import { LocationButton } from "@/components/location-button";
 import { PhotoMenu } from "@/components/photo-menu";
+import { TypingIndicator } from "@/components/typing-indicator";
 
 interface Message {
   id: string;
@@ -876,9 +877,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                       stops={message.heritageRoute.sites}
                       totalDistance={message.heritageRoute.totalDistance}
                       totalWalkingTime={message.heritageRoute.totalWalkingTime}
-                      estimatedTotalTime={
-                        message.heritageRoute.estimatedTotalTime
-                      }
+                      estimatedTotalTime={message.heritageRoute.estimatedTotalTime}
                     />
                   </div>
                 )}
@@ -893,6 +892,11 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 )}
               </div>
             ))}
+            {isAnalyzing && (
+              <div className="w-full mb-4">
+                <TypingIndicator />
+              </div>
+            )}
             <div ref={messagesEndRef} />
             <div className="h-4 sm:h-6" />
           </div>
