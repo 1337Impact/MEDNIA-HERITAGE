@@ -60,9 +60,21 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			moroccan: {
+  				terracotta: 'hsl(var(--moroccan-terracotta))',
+  				blue: 'hsl(var(--moroccan-blue))',
+  				green: 'hsl(var(--moroccan-green))',
+  				gold: 'hsl(var(--moroccan-gold))',
+  				brown: 'hsl(var(--moroccan-brown))',
   			}
   		},
+  		backgroundImage: {
+  			'zellige': "url('/patterns/zellige.svg')",
+  			'zellige-border': "url('/patterns/zellige-border.svg')",
+  		},
   		borderRadius: {
+  			'zellige': '2rem 0.5rem 2rem 0.5rem',
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
