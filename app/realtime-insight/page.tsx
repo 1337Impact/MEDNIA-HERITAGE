@@ -42,7 +42,12 @@ const MoroccanHeritageGuide = () => {
     if (savedConversation) {
       try {
         const parsedConversation = JSON.parse(savedConversation);
-        setConversation(parsedConversation);
+        // Convert timestamp strings back to Date objects
+        const messagesWithDates = parsedConversation.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+        setConversation(messagesWithDates);
       } catch (error) {
         console.error("Failed to load conversation history:", error);
       }
@@ -116,9 +121,14 @@ const MoroccanHeritageGuide = () => {
   // Save conversation history when it changes
   useEffect(() => {
     if (conversation.length > 0) {
+      // Save messages with timestamps as ISO strings
+      const messagesForStorage = conversation.map((msg) => ({
+        ...msg,
+        timestamp: msg.timestamp.toISOString(),
+      }));
       localStorage.setItem(
         "moroccanGuideConversation",
-        JSON.stringify(conversation)
+        JSON.stringify(messagesForStorage)
       );
     }
   }, [conversation]);
@@ -499,6 +509,31 @@ COMMUNICATION STYLE:
     }
   }, [captureInterval, isStreaming]);
 
+  // Get saved messages from localStorage
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("messages");
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        // Convert timestamp strings back to Date objects
+        const messagesWithDates = parsed.map((msg) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+        setConversation(messagesWithDates);
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    }
+  }, []);
+
+  // When saving messages to localStorage
+  useEffect(() => {
+    if (conversation.length > 0) {
+      localStorage.setItem("messages", JSON.stringify(conversation));
+    }
+  }, [conversation]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 p-6">
       <div className="max-w-6xl mx-auto">
@@ -676,7 +711,9 @@ COMMUNICATION STYLE:
                           {msg.type === "user" ? "You" : "Guide"}
                         </span>
                         <span className="text-xs opacity-60">
-                          {msg.timestamp.toLocaleTimeString()}
+                          {msg.timestamp instanceof Date
+                            ? msg.timestamp.toLocaleTimeString()
+                            : new Date(msg.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
                       <p className="text-sm leading-relaxed">{msg.content}</p>
