@@ -1,38 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef, useCallback } from "react"
-import { Camera, Send, ImageIcon, X, Sparkles, MapPin, Navigation } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { GeometricLoader } from "@/components/geometric-loader"
-import { ChatMessage } from "@/components/chat-message"
-import { PhotoMenu } from "@/components/photo-menu"
-import { LocationButton } from "@/components/location-button"
+import { useState, useRef, useCallback } from "react";
+import {
+  Camera,
+  Send,
+  ImageIcon,
+  X,
+  Sparkles,
+  MapPin,
+  Navigation,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { GeometricLoader } from "@/components/geometric-loader";
+import { ChatMessage } from "@/components/chat-message";
+import { PhotoMenu } from "@/components/photo-menu";
+import { LocationButton } from "@/components/location-button";
 
 interface Message {
-  id: string
-  type: "user" | "assistant"
-  content: string
-  image?: string
-  timestamp: Date
+  id: string;
+  type: "user" | "assistant";
+  content: string;
+  image?: string;
+  timestamp: Date;
   heritageInfo?: {
-    title: string
-    period: string
-    description: string
-    significance: string
-    location: string
-    tips: string[]
-    relatedElements: string[]
-    confidence: number
-  }
+    title: string;
+    period: string;
+    description: string;
+    significance: string;
+    location: string;
+    tips: string[];
+    relatedElements: string[];
+    confidence: number;
+  };
 }
 
 interface LocationData {
-  latitude: number
-  longitude: number
-  accuracy: number
+  latitude: number;
+  longitude: number;
+  accuracy: number;
 }
 
 export default function MedinaGuide() {
@@ -44,76 +52,83 @@ export default function MedinaGuide() {
         "مرحبا! Welcome to your personal Medina heritage guide. Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🏛️",
       timestamp: new Date(),
     },
-  ])
-  const [inputValue, setInputValue] = useState("")
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
-  const [showCamera, setShowCamera] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
-  const [isLocating, setIsLocating] = useState(false)
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null
+  );
+  const [isLocating, setIsLocating] = useState(false);
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const addMessage = (message: Omit<Message, "id" | "timestamp">) => {
     const newMessage: Message = {
       ...message,
       id: Date.now().toString(),
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, newMessage])
-    setTimeout(scrollToBottom, 100)
-  }
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    setTimeout(scrollToBottom, 100);
+  };
 
   const getCurrentLocation = useCallback(async () => {
-    setIsLocating(true)
+    setIsLocating(true);
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        })
-      })
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000,
+          });
+        }
+      );
 
       const locationData: LocationData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
-      }
+      };
 
-      setCurrentLocation(locationData)
+      setCurrentLocation(locationData);
 
       addMessage({
         type: "assistant",
         content: `📍 **Location Found!**
 
-**Coordinates:** ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}
+**Coordinates:** ${locationData.latitude.toFixed(
+          6
+        )}, ${locationData.longitude.toFixed(6)}
 **Accuracy:** ±${Math.round(locationData.accuracy)}m
 
 I've pinpointed your location! Now you can explore the heritage sites around you. Click "Explore Surrounding" to discover what historical treasures are nearby! 🗺️`,
-      })
+      });
     } catch (error) {
-      let errorMessage = "I couldn't access your location. "
+      let errorMessage = "I couldn't access your location. ";
 
       if (error instanceof GeolocationPositionError) {
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage += "Please enable location permissions in your browser settings."
-            break
+            errorMessage +=
+              "Please enable location permissions in your browser settings.";
+            break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage += "Location information is unavailable."
-            break
+            errorMessage += "Location information is unavailable.";
+            break;
           case error.TIMEOUT:
-            errorMessage += "Location request timed out. Please try again."
-            break
+            errorMessage += "Location request timed out. Please try again.";
+            break;
         }
       }
 
@@ -122,30 +137,31 @@ I've pinpointed your location! Now you can explore the heritage sites around you
         content: `❌ ${errorMessage}
 
 You can still use the app by taking photos of heritage elements around you! 📸`,
-      })
+      });
     } finally {
-      setIsLocating(false)
+      setIsLocating(false);
     }
-  }, [])
+  }, []);
 
   const exploreSurrounding = useCallback(async () => {
     if (!currentLocation) {
       addMessage({
         type: "assistant",
-        content: "Please use 'Locate Me' first to find heritage sites around you! 📍",
-      })
-      return
+        content:
+          "Please use 'Locate Me' first to find heritage sites around you! 📍",
+      });
+      return;
     }
 
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
     addMessage({
       type: "assistant",
       content: "🔍 Searching for heritage sites around you...",
-    })
+    });
 
     // Simulate API call to heritage database
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Mock heritage sites near Fes medina (you would replace this with real API data)
     const nearbyHeritage = [
@@ -161,16 +177,18 @@ You can still use the app by taking photos of heritage elements around you! 📸
         distance: "300m",
         direction: "East",
         period: "1323-1325 (Marinid Dynasty)",
-        description: "Exquisite example of Marinid architecture with intricate zellige work",
+        description:
+          "Exquisite example of Marinid architecture with intricate zellige work",
       },
       {
         name: "Chouara Tannery",
         distance: "450m",
         direction: "Southeast",
         period: "11th Century",
-        description: "One of the oldest leather tanneries in the world, still operating today",
+        description:
+          "One of the oldest leather tanneries in the world, still operating today",
       },
-    ]
+    ];
 
     const heritageList = nearbyHeritage
       .map(
@@ -178,9 +196,9 @@ You can still use the app by taking photos of heritage elements around you! 📸
           `🏛️ **${site.name}**
 📏 ${site.distance} ${site.direction}
 📅 ${site.period}
-${site.description}`,
+${site.description}`
       )
-      .join("\n\n")
+      .join("\n\n");
 
     addMessage({
       type: "assistant",
@@ -189,92 +207,95 @@ ${site.description}`,
 ${heritageList}
 
 Take a photo of any of these sites or their architectural details to learn more about their history and significance! You can also ask me specific questions about what you see. 📸✨`,
-    })
+    });
 
-    setIsAnalyzing(false)
-  }, [currentLocation])
+    setIsAnalyzing(false);
+  }, [currentLocation]);
 
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
-      })
+      });
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        setShowCamera(true)
-        setShowPhotoMenu(false)
+        videoRef.current.srcObject = stream;
+        setShowCamera(true);
+        setShowPhotoMenu(false);
       }
     } catch (error) {
-      console.error("Error accessing camera:", error)
+      console.error("Error accessing camera:", error);
     }
-  }, [])
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-      tracks.forEach((track) => track.stop())
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => track.stop());
     }
-    setShowCamera(false)
-  }, [])
+    setShowCamera(false);
+  }, []);
 
   const capturePhoto = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
-      const ctx = canvas.getContext("2d")
+      const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(video, 0, 0)
-        const imageData = canvas.toDataURL("image/jpeg")
-        stopCamera()
+        ctx.drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL("image/jpeg");
+        stopCamera();
 
         addMessage({
           type: "user",
           content: "What can you tell me about this?",
           image: imageData,
-        })
+        });
 
-        analyzeImage(imageData)
+        analyzeImage(imageData);
       }
     }
-  }, [stopCamera])
+  }, [stopCamera]);
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string
-        setShowPhotoMenu(false)
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageData = e.target?.result as string;
+          setShowPhotoMenu(false);
 
-        addMessage({
-          type: "user",
-          content: "What can you tell me about this?",
-          image: imageData,
-        })
+          addMessage({
+            type: "user",
+            content: "What can you tell me about this?",
+            image: imageData,
+          });
 
-        analyzeImage(imageData)
+          analyzeImage(imageData);
+        };
+        reader.readAsDataURL(file);
       }
-      reader.readAsDataURL(file)
-    }
-  }, [])
+    },
+    []
+  );
 
   const analyzeImage = async (imageData: string) => {
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
     const loadingMessage: Message = {
       id: "loading",
       type: "assistant",
       content: "Analyzing your photo...",
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, loadingMessage])
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000))
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    setMessages((prev) => prev.filter((msg) => msg.id !== "loading"))
+    setMessages((prev) => prev.filter((msg) => msg.id !== "loading"));
 
     const mockHeritageInfo = {
       title: "Zellige Tilework",
@@ -283,19 +304,26 @@ Take a photo of any of these sites or their architectural details to learn more 
         "This is a beautiful example of traditional Moroccan zellige tilework. Each tile is hand-cut from clay and glazed in vibrant colors, creating intricate geometric patterns that have adorned Moroccan architecture for over a millennium.",
       significance:
         "These geometric patterns reflect Islamic artistic principles, avoiding figurative representation while creating infinite, meditative designs that symbolize the unity and continuity of creation.",
-      location: "Found throughout Moroccan palaces, mosques, and traditional houses",
+      location:
+        "Found throughout Moroccan palaces, mosques, and traditional houses",
       tips: [
         "Notice how each tile is slightly different - they're all hand-cut",
         "The patterns create optical illusions of movement",
         "This blue and white combination is called 'Fassi' style",
       ],
-      relatedElements: ["Tadelakt plaster", "Cedar wood carvings", "Horseshoe arches"],
+      relatedElements: [
+        "Tadelakt plaster",
+        "Cedar wood carvings",
+        "Horseshoe arches",
+      ],
       confidence: 0.92,
-    }
+    };
 
     addMessage({
       type: "assistant",
-      content: `I can see this is **${mockHeritageInfo.title}** from the **${mockHeritageInfo.period}**! 
+      content: `I can see this is **${mockHeritageInfo.title}** from the **${
+        mockHeritageInfo.period
+      }**! 
 
 ${mockHeritageInfo.description}
 
@@ -307,29 +335,29 @@ ${mockHeritageInfo.tips.map((tip) => `• ${tip}`).join("\n")}
 
 Would you like to know more about any specific aspect of this tilework? 🎨`,
       heritageInfo: mockHeritageInfo,
-    })
+    });
 
-    setIsAnalyzing(false)
-  }
+    setIsAnalyzing(false);
+  };
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
       addMessage({
         type: "user",
         content: inputValue,
-      })
+      });
 
       setTimeout(() => {
         addMessage({
           type: "assistant",
           content:
             "That's a great question! I'd be happy to help you learn more about Moroccan heritage. Feel free to share a photo of any architectural element you'd like to explore, or ask me about specific aspects of what you've already discovered. 🏛️",
-        })
-      }, 1000)
+        });
+      }, 1000);
 
-      setInputValue("")
+      setInputValue("");
     }
-  }
+  };
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -355,7 +383,9 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Heritage Guide</h1>
+              <h1 className="text-xl font-bold text-gray-900">
+                Heritage Guide
+              </h1>
               <p className="text-sm text-gray-600">Your AI Medina companion</p>
             </div>
           </div>
@@ -364,7 +394,7 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 relative z-10">
-        <div className="max-w-md mx-auto space-y-4">
+        <div className="max-w-xl mx-auto px-6 space-y-4">
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
@@ -383,7 +413,12 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
       {showCamera && (
         <div className="absolute inset-0 bg-black z-50 flex flex-col">
           <div className="flex-1 relative">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
             <div className="absolute inset-4 border-2 border-white/30 rounded-lg pointer-events-none">
               <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-white/60"></div>
               <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-white/60"></div>
@@ -404,7 +439,11 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
                 Cancel
               </Button>
 
-              <Button onClick={capturePhoto} size="lg" className="bg-white text-black hover:bg-gray-100 px-8">
+              <Button
+                onClick={capturePhoto}
+                size="lg"
+                className="bg-white text-black hover:bg-gray-100 px-8"
+              >
                 <Camera className="w-5 h-5 mr-2" />
                 Capture
               </Button>
@@ -415,7 +454,7 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
 
       {/* Input Area */}
       <div className="bg-white/95 backdrop-blur-sm border-t border-teal-200 p-4 relative z-10">
-        <div className="max-w-md mx-auto space-y-3">
+        <div className="max-w-xl mx-auto space-y-3">
           {/* Location Buttons */}
           <div className="flex gap-2">
             <LocationButton
@@ -476,8 +515,14 @@ Would you like to know more about any specific aspect of this tilework? 🎨`,
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
       <canvas ref={canvasRef} className="hidden" />
     </div>
-  )
+  );
 }
