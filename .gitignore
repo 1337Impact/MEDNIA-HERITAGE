@@ -2,4 +2,4 @@ backend/.env
 backend/chat_messages.db
 backend/.venv
 backend\.env
-backend\.venv
+backend/.env
