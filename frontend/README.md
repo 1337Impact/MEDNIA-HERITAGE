@@ -1,6 +1,5 @@
 # Medina Navigator
 
-![Medina Navigator](public/images/zellige-pattern.png)
 
 Medina Navigator is an AI-powered guide that helps visitors explore and understand Morocco's rich cultural heritage. The application provides real-time insights, navigation assistance, and cultural information through an interactive interface.
 
