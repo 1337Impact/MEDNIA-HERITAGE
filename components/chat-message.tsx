@@ -20,9 +20,10 @@ interface Message {
 
 interface ChatMessageProps {
   message: Message
+  isAnalyzing?: boolean
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, isAnalyzing = false }: ChatMessageProps) {
   const isUser = message.type === "user"
 
   return (
@@ -47,6 +48,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   : "bg-white/90 backdrop-blur-sm text-gray-900"
               } ${isUser ? "rounded-br-md" : "rounded-bl-md"}`}
             >
+              {/* Loading state */}
+              {isAnalyzing && (
+                <div className="flex items-center space-x-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>
+                  <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse delay-150"></div>
+                  <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse delay-300"></div>
+                </div>
+              )}
+              
               {/* Image if present */}
               {message.image && (
                 <div className="mb-3">
