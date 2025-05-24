@@ -21,10 +21,10 @@ const MoroccanHeritageGuide = () => {
   const [description, setDescription] = useState("");
   const [conversation, setConversation] = useState([]);
   const [error, setError] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [captureInterval, setCaptureInterval] = useState(5000);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [changeThreshold, setChangeThreshold] = useState(0.3);
+  const [currentTranscript, setCurrentTranscript] = useState("");
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -34,8 +34,20 @@ const MoroccanHeritageGuide = () => {
   const recognitionRef = useRef(null);
   const synthesisRef = useRef(null);
 
-  // Initialize speech services
+  // Initialize speech services and load conversation history
   useEffect(() => {
+    // Load conversation history from localStorage
+    const savedConversation = localStorage.getItem("moroccanGuideConversation");
+
+    if (savedConversation) {
+      try {
+        const parsedConversation = JSON.parse(savedConversation);
+        setConversation(parsedConversation);
+      } catch (error) {
+        console.error("Failed to load conversation history:", error);
+      }
+    }
+
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -45,18 +57,54 @@ const MoroccanHeritageGuide = () => {
       recognitionRef.current.lang = "en-US";
 
       recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0].transcript)
-          .join("");
+        let finalTranscript = "";
+        let interimTranscript = "";
 
-        if (event.results[event.results.length - 1].isFinal) {
-          handleVoiceQuestion(transcript);
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        setCurrentTranscript(interimTranscript);
+
+        if (finalTranscript.trim()) {
+          setCurrentTranscript("");
+          handleVoiceQuestion(finalTranscript.trim());
+        }
+      };
+
+      recognitionRef.current.onstart = () => {
+        // Cancel any ongoing speech when user starts talking
+        if (synthesisRef.current) {
+          synthesisRef.current.cancel();
+          setIsSpeaking(false);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        if (isListening) {
+          // Restart recognition if still supposed to be listening
+          setTimeout(() => {
+            if (isListening && recognitionRef.current) {
+              recognitionRef.current.start();
+            }
+          }, 100);
         }
       };
 
       recognitionRef.current.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        setIsListening(false);
+        setCurrentTranscript("");
+        if (event.error === "not-allowed") {
+          setError(
+            "Microphone access denied. Please allow microphone access and try again."
+          );
+          setIsListening(false);
+        }
       };
     }
 
@@ -65,8 +113,24 @@ const MoroccanHeritageGuide = () => {
     }
   }, []);
 
+  // Save conversation history when it changes
+  useEffect(() => {
+    if (conversation.length > 0) {
+      localStorage.setItem(
+        "moroccanGuideConversation",
+        JSON.stringify(conversation)
+      );
+    }
+  }, [conversation]);
+
   // Request camera and microphone access
   const startStream = async () => {
+    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
+    if (!apiKey) {
+      setError("Azure OpenAI API key not configured");
+      return;
+    }
+
     try {
       const constraints = {
         video: { width: 640, height: 480 },
@@ -84,7 +148,7 @@ const MoroccanHeritageGuide = () => {
 
         // Add welcome message with Morocco-specific guidance
         const welcomeMsg =
-          "مرحبا! Welcome to your personal Moroccan Heritage Guide! 🇲🇦 I can see what's in front of you and share the rich stories of Morocco's culture, architecture, and traditions. Point your camera at any traditional elements - patterns, crafts, architecture - and I'll tell you their cultural significance. Ask me anything about what you see!";
+          "Welcome to your personal Moroccan Heritage Guide! 🇲🇦 I can see what's in front of you and share the rich stories of Morocco's culture.";
         setConversation([
           { type: "assistant", content: welcomeMsg, timestamp: new Date() },
         ]);
@@ -98,7 +162,7 @@ const MoroccanHeritageGuide = () => {
     }
   };
 
-  // Stop the stream
+  // Stop the stream and clear session
   const stopStream = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -116,10 +180,16 @@ const MoroccanHeritageGuide = () => {
       synthesisRef.current.cancel();
     }
 
+    // Clear session data
+    localStorage.removeItem("moroccanGuideConversation");
+    setConversation([]);
+    setCurrentTranscript("");
+
     setIsStreaming(false);
     setIsAnalyzing(false);
     setIsListening(false);
     setIsSpeaking(false);
+    setDescription("");
   };
 
   // Capture screenshot from video
@@ -184,8 +254,9 @@ const MoroccanHeritageGuide = () => {
     isVoiceQuestion = false,
     question = ""
   ) => {
+    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
     if (!apiKey) {
-      setError("Please enter your Azure OpenAI API key");
+      setError("Azure OpenAI API key not configured");
       return;
     }
 
@@ -231,8 +302,8 @@ COMMUNICATION STYLE:
 - Keep automatic descriptions concise (1-2 sentences) but be detailed when asked specific questions`;
 
       const userPrompt = isVoiceQuestion
-        ? `A tourist is asking: "${question}" about what they see in this image. Please provide a detailed, engaging answer about the Moroccan cultural and heritage aspects. Include historical context, cultural significance, and interesting facts that would fascinate a visitor to Morocco.`
-        : 'Analyze this image for any traditional Moroccan, Islamic, or North African cultural elements. If you see architecture, patterns, crafts, clothing, or other heritage items, provide a brief but engaging description. If the scene shows a typical Moroccan setting (medina, riad, souk, etc.), describe its significance. If nothing culturally significant is visible, just say "Exploring..." and wait for the scene to change.';
+        ? `A tourist is asking: "${question}" about what they see in this image. Please provide a detailed, engaging answer about the Moroccan cultural and heritage aspects. Include historical context, cultural significance, and interesting facts that would fascinate a visitor to Morocco. Be conversational and enthusiastic like a friendly local guide.`
+        : 'Analyze this image for any traditional Moroccan, Islamic, or North African cultural elements. If you see architecture, patterns, crafts, clothing, or other heritage items, provide a brief but engaging description (1-2 sentences). If the scene shows a typical Moroccan setting (medina, riad, souk, etc.), describe its significance. If nothing culturally significant is visible, respond with just "Exploring..." and nothing more.';
 
       const response = await fetch(azureEndpoint, {
         method: "POST",
@@ -284,7 +355,11 @@ COMMUNICATION STYLE:
         if (hasSceneChanged(imageData, lastImageRef.current)) {
           // Only speak if there's meaningful cultural content (not just "Exploring...")
           setDescription(newDescription);
-          if (!newDescription.toLowerCase().includes("exploring...")) {
+          if (
+            !newDescription.toLowerCase().includes("exploring") &&
+            !newDescription.toLowerCase().includes("wait for") &&
+            newDescription.trim().length > 20
+          ) {
             speakText(newDescription);
           }
           lastImageRef.current = imageData;
@@ -303,6 +378,7 @@ COMMUNICATION STYLE:
   const speakText = (text) => {
     if (!synthesisRef.current || !audioEnabled) return;
 
+    // Cancel any ongoing speech
     synthesisRef.current.cancel();
     setIsSpeaking(true);
 
@@ -311,15 +387,54 @@ COMMUNICATION STYLE:
     utterance.pitch = 1;
     utterance.volume = 0.8;
 
+    // Add audio completion and error handlers
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
-    synthesisRef.current.speak(utterance);
+    // Don't speak if user is currently talking
+    if (!isListening || !currentTranscript) {
+      synthesisRef.current.speak(utterance);
+    }
+  };
+
+  // Toggle voice recognition
+  const toggleListening = () => {
+    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
+    if (!apiKey) {
+      setError("Azure OpenAI API key not configured");
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      setError("Speech recognition not supported in this browser");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      setCurrentTranscript("");
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setError(""); // Clear any previous errors
+      } catch (error) {
+        console.error("Failed to start speech recognition:", error);
+        setError("Failed to start voice recognition. Please try again.");
+      }
+    }
   };
 
   // Handle voice questions
   const handleVoiceQuestion = async (question) => {
     if (!question.trim()) return;
+
+    // Add a debug log for the API key
+    console.log(
+      "API Key available:",
+      !!process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY
+    ); // This will log true/false without exposing the key
 
     const userMessage = {
       type: "user",
@@ -330,24 +445,33 @@ COMMUNICATION STYLE:
 
     const currentImage = captureScreenshot();
     if (currentImage) {
-      await analyzeImage(currentImage, true, question);
+      try {
+        await analyzeImage(currentImage, true, question);
+      } catch (error) {
+        console.error("Error analyzing voice question:", error);
+        const errorMessage = {
+          type: "assistant",
+          content: `I apologize, but I encountered an error processing your question: "${question}". Please try asking again.`,
+          timestamp: new Date(),
+        };
+        setConversation((prev) => [...prev, errorMessage]);
+      }
+    } else {
+      const noImageMessage = {
+        type: "assistant",
+        content:
+          "I need to see something through the camera to answer your question. Please make sure the camera is active and pointing at what you want to know about.",
+        timestamp: new Date(),
+      };
+      setConversation((prev) => [...prev, noImageMessage]);
+      speakText(noImageMessage.content);
     }
   };
 
-  // Toggle voice recognition
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      setError("Speech recognition not supported in this browser");
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
+  // Clear conversation history
+  const clearConversation = () => {
+    localStorage.removeItem("moroccanGuideConversation");
+    setConversation([]);
   };
 
   // Start automatic capture and analysis
@@ -387,20 +511,6 @@ COMMUNICATION STYLE:
             Explore Morocco's rich culture and traditions with AI-powered
             guidance
           </p>
-        </div>
-
-        {/* API Key Input */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-          <label className="block text-white font-medium mb-2">
-            Azure OpenAI API Key (required)
-          </label>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Azure OpenAI API key"
-            className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
         </div>
 
         {/* Controls */}
@@ -476,12 +586,12 @@ COMMUNICATION STYLE:
           </div>
 
           {isStreaming && (
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={toggleListening}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
                   isListening
-                    ? "bg-red-500 hover:bg-red-600 text-white"
+                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
                     : "bg-blue-500 hover:bg-blue-600 text-white"
                 }`}
               >
@@ -491,6 +601,13 @@ COMMUNICATION STYLE:
                   <Mic className="w-4 h-4" />
                 )}
                 {isListening ? "Stop Listening" : "Ask Questions"}
+              </button>
+
+              <button
+                onClick={clearConversation}
+                className="flex items-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-all"
+              >
+                Clear Chat
               </button>
 
               {(isAnalyzing || isSpeaking) && (
@@ -573,7 +690,11 @@ COMMUNICATION STYLE:
               <div className="mt-4 text-center">
                 <div className="inline-flex items-center gap-2 text-green-300">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  Listening for your question...
+                  {currentTranscript ? (
+                    <span>Heard: "{currentTranscript}"</span>
+                  ) : (
+                    <span>Listening for your question...</span>
+                  )}
                 </div>
               </div>
             )}
