@@ -1,128 +1,141 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect, use } from "react"
-import { Camera, Send, ImageIcon, X, Sparkles, MapPin, Navigation, Star } from "lucide-react"
-import axios from "axios"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { GeometricLoader } from "@/components/geometric-loader"
-import { ChatMessage } from "@/components/chat-message"
-import { RouteCard } from "@/app/components/route-card"
-import { LocationButton } from "@/components/location-button"
-import { PhotoMenu } from "@/components/photo-menu"
+import { useState, useRef, useEffect, use } from "react";
+import {
+  Camera,
+  Send,
+  ImageIcon,
+  X,
+  Sparkles,
+  MapPin,
+  Navigation,
+  Star,
+} from "lucide-react";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { GeometricLoader } from "@/components/geometric-loader";
+import { ChatMessage } from "@/app/components/chat-message";
+import { RouteCard } from "@/app/components/route-card";
+import { LocationButton } from "@/components/location-button";
+import { PhotoMenu } from "@/components/photo-menu";
 
 interface Message {
-  id: string
-  type: "user" | "assistant"
-  content: string
-  image?: string
-  timestamp: Date
+  id: string;
+  type: "user" | "assistant";
+  content: string;
+  image?: string;
+  timestamp: Date;
   heritageInfo?: {
-    title: string
-    period: string
-    description: string
-    significance: string
-    location: string
-    tips: string[]
-    relatedElements: string[]
-    confidence: number
-  }
+    title: string;
+    period: string;
+    description: string;
+    significance: string;
+    location: string;
+    tips: string[];
+    relatedElements: string[];
+    confidence: number;
+  };
   heritageRoute?: {
     sites: Array<{
-      id: string
-      name: string
-      nameAr: string
-      distance: string
-      walkingTime: string
-      direction: string
-      period: string
-      description: string
-      rating: number
-      visitors: string
-      coordinates: { lat: number; lng: number }
-      googleMapsUrl: string
-      visitDuration: string
-      highlights: string[]
-      tips: string
-    }>
-    totalDistance: string
-    totalWalkingTime: string
-    estimatedTotalTime: string
-    routeType: string
-  }
+      id: string;
+      name: string;
+      nameAr: string;
+      distance: string;
+      walkingTime: string;
+      direction: string;
+      period: string;
+      description: string;
+      rating: number;
+      visitors: string;
+      coordinates: { lat: number; lng: number };
+      googleMapsUrl: string;
+      visitDuration: string;
+      highlights: string[];
+      tips: string;
+    }>;
+    totalDistance: string;
+    totalWalkingTime: string;
+    estimatedTotalTime: string;
+    routeType: string;
+  };
 }
 
 interface LocationData {
-  latitude: number
-  longitude: number
-  accuracy: number
+  latitude: number;
+  longitude: number;
+  accuracy: number;
 }
 
 interface ApiHeritageSite {
-  name: string
-  nameAr: string
-  distance: string
-  walkingTime: string
-  direction: string
-  period: string
-  description: string
-  rating: number
-  visitors: string
-  coordinates: { lat: number; lng: number }
-  googleMapsUrl: string
-  visitDuration: string
-  highlights: string[]
-  tips: string
+  name: string;
+  nameAr: string;
+  distance: string;
+  walkingTime: string;
+  direction: string;
+  period: string;
+  description: string;
+  rating: number;
+  visitors: string;
+  coordinates: { lat: number; lng: number };
+  googleMapsUrl: string;
+  visitDuration: string;
+  highlights: string[];
+  tips: string;
 }
 
 interface ApiResponse {
-  spots: ApiHeritageSite[]
+  spots: ApiHeritageSite[];
 }
 
 interface ChatHistoryItem {
-  id: number
-  user_id: number
-  user_message: string
-  ai_response: string
-  timestamp: string
+  id: number;
+  user_id: number;
+  user_message: string;
+  ai_response: string;
+  timestamp: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const setCookie = (name: string, value: string, days = 30) => {
-  const expires = new Date()
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
-  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`
-}
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
 
 const getCookie = (name: string): string | null => {
-  const nameEQ = name + "="
-  const ca = document.cookie.split(";")
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
   for (let i = 0; i < ca.length; i++) {
-    let c = ca[i]
-    while (c.charAt(0) === " ") c = c.substring(1, c.length)
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
   }
-  return null
-}
+  return null;
+};
 
 const loadLocationFromCookies = (setCurrentLocation: any) => {
-  const savedLat = getCookie("heritage_latitude")
-  const savedLng = getCookie("heritage_longitude")
+  const savedLat = getCookie("heritage_latitude");
+  const savedLng = getCookie("heritage_longitude");
 
   if (savedLat && savedLng) {
     const locationData: LocationData = {
       latitude: Number.parseFloat(savedLat),
       longitude: Number.parseFloat(savedLng),
       accuracy: 100,
-    }
-    setCurrentLocation(locationData)
-    return locationData
+    };
+    setCurrentLocation(locationData);
+    return locationData;
   }
-  return null
-}
+  return null;
+};
 
-const fetchHeritageLocations = async (latitude: number, longitude: number, userId: string): Promise<ApiResponse> => {
-  const url = `${API_BASE_URL}/suggest-locations?location=${latitude},${longitude}&user_id=${userId}`
+const fetchHeritageLocations = async (
+  latitude: number,
+  longitude: number,
+  userId: string
+): Promise<ApiResponse> => {
+  const url = `${API_BASE_URL}/suggest-locations?location=${latitude},${longitude}&user_id=${userId}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -130,18 +143,26 @@ const fetchHeritageLocations = async (latitude: number, longitude: number, userI
       "Content-Type": "application/json",
       "ngrok-skip-browser-warning": "true",
     },
-  })
+  });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`)
+    throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json()
-}
+  return response.json();
+};
 
-const sendChatMessage = async (message: string, userId: string, currentLocation: LocationData | null): Promise<any> => {
-  const locationParam = currentLocation ? `${currentLocation.latitude},${currentLocation.longitude}` : '';
-  const url = `${API_BASE_URL}/chat?user_id=${userId}${locationParam ? `&location=${locationParam}` : ''}`
+const sendChatMessage = async (
+  message: string,
+  userId: string,
+  currentLocation: LocationData | null
+): Promise<any> => {
+  const locationParam = currentLocation
+    ? `${currentLocation.latitude},${currentLocation.longitude}`
+    : "";
+  const url = `${API_BASE_URL}/chat?user_id=${userId}${
+    locationParam ? `&location=${locationParam}` : ""
+  }`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -150,82 +171,94 @@ const sendChatMessage = async (message: string, userId: string, currentLocation:
       "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify({ message }),
-  })
+  });
 
   if (!response.ok) {
-    throw new Error(`Chat API Error: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Chat API Error: ${response.status} ${response.statusText}`
+    );
   }
 
-  return response.json()
-}
+  return response.json();
+};
 
 const fetchChatHistory = async (userId: string): Promise<ChatHistoryItem[]> => {
   try {
-    const url = `${API_BASE_URL}/messages?user_id=${encodeURIComponent(userId)}`
-    
+    const url = `${API_BASE_URL}/messages?user_id=${encodeURIComponent(
+      userId
+    )}`;
+
     const response = await axios.get<ChatHistoryItem[]>(url, {
       headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
       },
     });
 
-    console.log('Chat history for user', userId, ':', response.data);
+    console.log("Chat history for user", userId, ":", response.data);
 
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('Failed to fetch chat history:', error.message);
+      console.error("Failed to fetch chat history:", error.message);
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
       }
     } else {
-      console.error('An unexpected error occurred:', error);
+      console.error("An unexpected error occurred:", error);
     }
     return [];
   }
-}
+};
 
 const calculateRouteStats = (sites: ApiHeritageSite[]) => {
   const walkingTimes = sites.map((site) => {
-    const timeStr = site.walkingTime.replace(/[^\d]/g, "")
-    return Number.parseInt(timeStr) || 0
-  })
+    const timeStr = site.walkingTime.replace(/[^\d]/g, "");
+    return Number.parseInt(timeStr) || 0;
+  });
 
   const distances = sites.map((site) => {
-    const distanceStr = site.distance.replace(/[^\d]/g, "")
-    return Number.parseInt(distanceStr) || 0
-  })
+    const distanceStr = site.distance.replace(/[^\d]/g, "");
+    return Number.parseInt(distanceStr) || 0;
+  });
 
-  const totalWalkingMinutes = walkingTimes.reduce((sum, time) => sum + time, 0)
-  const totalDistanceMeters = distances.reduce((sum, dist) => sum + dist, 0)
+  const totalWalkingMinutes = walkingTimes.reduce((sum, time) => sum + time, 0);
+  const totalDistanceMeters = distances.reduce((sum, dist) => sum + dist, 0);
 
   const visitTimes = sites.map((site) => {
-    const visitStr = site.visitDuration.split("-")[0].replace(/[^\d]/g, "")
-    return Number.parseInt(visitStr) || 30
-  })
-  const totalVisitMinutes = visitTimes.reduce((sum, time) => sum + time, 0)
-  const totalTimeMinutes = totalWalkingMinutes + totalVisitMinutes
+    const visitStr = site.visitDuration.split("-")[0].replace(/[^\d]/g, "");
+    return Number.parseInt(visitStr) || 30;
+  });
+  const totalVisitMinutes = visitTimes.reduce((sum, time) => sum + time, 0);
+  const totalTimeMinutes = totalWalkingMinutes + totalVisitMinutes;
 
   return {
     totalDistance:
-      totalDistanceMeters > 1000 ? `${(totalDistanceMeters / 1000).toFixed(1)}km` : `${totalDistanceMeters}m`,
+      totalDistanceMeters > 1000
+        ? `${(totalDistanceMeters / 1000).toFixed(1)}km`
+        : `${totalDistanceMeters}m`,
     totalWalkingTime:
       totalWalkingMinutes > 60
-        ? `${Math.floor(totalWalkingMinutes / 60)}h ${totalWalkingMinutes % 60}min`
+        ? `${Math.floor(totalWalkingMinutes / 60)}h ${
+            totalWalkingMinutes % 60
+          }min`
         : `${totalWalkingMinutes} min`,
     estimatedTotalTime:
       totalTimeMinutes > 60
         ? `${Math.floor(totalTimeMinutes / 60)}h ${totalTimeMinutes % 60}min`
         : `${totalTimeMinutes} min`,
-  }
-}
+  };
+};
 
-const convertChatHistoryToMessages = (chatHistory: ChatHistoryItem[]): Message[] => {
-  const messages: Message[] = []
+const convertChatHistoryToMessages = (
+  chatHistory: ChatHistoryItem[]
+): Message[] => {
+  const messages: Message[] = [];
 
-  const sortedHistory = chatHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  const sortedHistory = chatHistory.sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
 
   sortedHistory.forEach((item) => {
     messages.push({
@@ -233,50 +266,52 @@ const convertChatHistoryToMessages = (chatHistory: ChatHistoryItem[]): Message[]
       type: "user",
       content: item.user_message,
       timestamp: new Date(item.timestamp),
-    })
+    });
 
     messages.push({
       id: `ai-${item.id}`,
       type: "assistant",
       content: item.ai_response,
       timestamp: new Date(item.timestamp),
-    })
-  })
+    });
+  });
 
-  return messages
-}
+  return messages;
+};
 
 interface PageParams {
-  id: string
+  id: string;
 }
 
 interface PageProps {
-  params: Promise<PageParams> | PageParams
+  params: Promise<PageParams> | PageParams;
 }
 
 export default function MedinaGuide({ params }: PageProps) {
-  const resolvedParams = 'then' in params ? use(params) : params
-  const userId = resolvedParams.id
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState("")
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
-  const [showCamera, setShowCamera] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
-  const [isLocating, setIsLocating] = useState(false)
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const resolvedParams = "then" in params ? use(params) : params;
+  const userId = resolvedParams.id;
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null
+  );
+  const [isLocating, setIsLocating] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        loadLocationFromCookies(setCurrentLocation)
-        const chatHistory = await fetchChatHistory(userId)
-        const convertedMessages = convertChatHistoryToMessages(chatHistory)
+        loadLocationFromCookies(setCurrentLocation);
+        const chatHistory = await fetchChatHistory(userId);
+        const convertedMessages = convertChatHistoryToMessages(chatHistory);
 
         if (convertedMessages.length === 0) {
           setMessages([
@@ -284,113 +319,121 @@ export default function MedinaGuide({ params }: PageProps) {
               id: "welcome",
               type: "assistant",
               content:
-                "أهلاً وسهلاً! Welcome to your personal Medina heritage guide. Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🕌✨",
+                "Welcome to your personal Medina heritage guide! Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🕌✨",
               timestamp: new Date(),
             },
-          ])
+          ]);
         } else {
-          setMessages(convertedMessages)
+          setMessages(convertedMessages);
         }
       } catch (error) {
-        console.error("Error loading chat history:", error)
+        console.error("Error loading chat history:", error);
         setMessages([
           {
             id: "welcome",
             type: "assistant",
             content:
-              "أهلاً وسهلاً! Welcome to your personal Medina heritage guide. Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🕌✨",
+              "Welcome to your personal Medina heritage guide! Share a photo of any architectural detail, doorway, or decoration and I'll tell you its story and significance. You can also explore heritage sites around your current location! 🕌✨",
             timestamp: new Date(),
           },
-        ])
+        ]);
       } finally {
-        setIsLoadingHistory(false)
+        setIsLoadingHistory(false);
       }
-    }
+    };
 
-    loadInitialData()
-  }, [userId])
+    loadInitialData();
+  }, [userId]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const addMessage = (message: Omit<Message, "id" | "timestamp">) => {
     const newMessage: Message = {
       ...message,
       id: Date.now().toString(),
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, newMessage])
-    setTimeout(scrollToBottom, 100)
-  }
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    setTimeout(scrollToBottom, 100);
+  };
 
   const getCurrentLocation = async () => {
-    setIsLocating(true)
+    setIsLocating(true);
 
-    const savedLocation = loadLocationFromCookies(setCurrentLocation)
+    const savedLocation = loadLocationFromCookies(setCurrentLocation);
     if (savedLocation) {
       addMessage({
         type: "assistant",
-        content: `🧭 **موقع محفوظ! Saved Location Found!**
+        content: `🧭 **Saved Location Found!**
 
-**إحداثيات | Coordinates:** ${savedLocation.latitude.toFixed(6)}, ${savedLocation.longitude.toFixed(6)}
-**مصدر | Source:** Previously saved location
+**Coordinates:** ${savedLocation.latitude.toFixed(
+          6
+        )}, ${savedLocation.longitude.toFixed(6)}
+**Source:** Previously saved location
 
-Great! I'm using your previously saved location. Click "استكشف المحيط | Explore Surrounding" to discover heritage sites, or use "تحديث الموقع | Update Location" to get your current position! 🗺️✨`,
-      })
-      setIsLocating(false)
-      return
+Great! I'm using your previously saved location. Click "Explore Surrounding" to discover heritage sites, or use "Update Location" to get your current position! 🗺️✨`,
+      });
+      setIsLocating(false);
+      return;
     }
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        })
-      })
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000,
+          });
+        }
+      );
 
       const locationData: LocationData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
-      }
+      };
 
-      setCookie("heritage_latitude", locationData.latitude.toString())
-      setCookie("heritage_longitude", locationData.longitude.toString())
+      setCookie("heritage_latitude", locationData.latitude.toString());
+      setCookie("heritage_longitude", locationData.longitude.toString());
 
-      setCurrentLocation(locationData)
+      setCurrentLocation(locationData);
 
       addMessage({
         type: "assistant",
-        content: `🧭 **موقعك محدد! Location Found!**
+        content: `🧭 **Location Found!**
 
-**إحداثيات | Coordinates:** ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}
-**دقة | Accuracy:** ±${Math.round(locationData.accuracy)}m
-**حفظ | Saved:** Location saved for future visits
+**Coordinates:** ${locationData.latitude.toFixed(
+          6
+        )}, ${locationData.longitude.toFixed(6)}
+**Accuracy:** ±${Math.round(locationData.accuracy)}m
+**Saved:** Location saved for future visits
 
-Perfect! I've found and saved your location. Now you can discover the magnificent heritage sites around you. Click "استكشف المحيط | Explore Surrounding" to uncover the historical treasures nearby! 🗺️✨`,
-      })
+Perfect! I've found and saved your location. Now you can discover the magnificent heritage sites around you. Click "Explore Surrounding" to uncover the historical treasures nearby! 🗺️✨`,
+      });
     } catch (error) {
-      let errorMessage = "لا يمكنني العثور على موقعك | I can't find your location. "
+      let errorMessage = "I can't find your location. ";
 
       if (error instanceof GeolocationPositionError) {
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage +=
-              "Please enable location permissions in your browser settings, or manually set your location by visiting a heritage site and taking a photo."
-            break
+              "Please enable location permissions in your browser settings, or manually set your location by visiting a heritage site and taking a photo.";
+            break;
           case error.POSITION_UNAVAILABLE:
             errorMessage +=
-              "Location information is unavailable. You can still explore by taking photos of heritage elements around you!"
-            break
+              "Location information is unavailable. You can still explore by taking photos of heritage elements around you!";
+            break;
           case error.TIMEOUT:
-            errorMessage += "Location request timed out. Please try again or explore by taking photos."
-            break
+            errorMessage +=
+              "Location request timed out. Please try again or explore by taking photos.";
+            break;
         }
       } else {
-        errorMessage += "Please enable location services or explore by taking photos of heritage elements around you!"
+        errorMessage +=
+          "Please enable location services or explore by taking photos of heritage elements around you!";
       }
 
       addMessage({
@@ -403,60 +446,66 @@ Perfect! I've found and saved your location. Now you can discover the magnificen
 🏛️ Ask me about specific Moroccan architectural features
 
 *Tip: If you visit any heritage site, take a photo and I'll help identify your location based on the architectural elements!*`,
-      })
+      });
     } finally {
-      setIsLocating(false)
+      setIsLocating(false);
     }
-  }
+  };
 
   const exploreSurrounding = async () => {
-    let locationToUse = currentLocation
+    let locationToUse = currentLocation;
 
     if (!locationToUse) {
-      locationToUse = loadLocationFromCookies(setCurrentLocation)
+      locationToUse = loadLocationFromCookies(setCurrentLocation);
     }
 
     if (!locationToUse) {
       addMessage({
         type: "assistant",
-        content: `📍 **موقع غير متوفر | Location Not Available**
+        content: `📍 **Location Not Available**
 
 I need your location to find heritage sites around you. Please:
 
-🧭 **Enable Location:** Click "حدد موقعي | Locate Me" to share your current position
+🧭 **Enable Location:** Click "Locate Me" to share your current position
 📸 **Take a Photo:** Capture any heritage element and I'll help identify your area
 🗺️ **Manual Exploration:** Ask me about specific Moroccan cities or heritage sites
 
 **Popular Heritage Areas:**
-• Fes Medina (فاس البالي)
-• Marrakech Medina (مراكش)
-• Chefchaouen (شفشاون)
-• Meknes (مكناس)
-• Rabat (الرباط)
+• Fes Medina
+• Marrakech Medina
+• Chefchaouen
+• Meknes
+• Rabat
 
 Which area would you like to explore? 🕌✨`,
-      })
-      return
+      });
+      return;
     }
 
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
-    const locationSource = currentLocation ? "current" : "saved"
+    const locationSource = currentLocation ? "current" : "saved";
 
     addMessage({
       type: "assistant",
-      content: `🔍 أبحث عن المواقع التراثية حولك | Searching for heritage sites around you...
-📍 Using ${locationSource} location: ${locationToUse.latitude.toFixed(4)}, ${locationToUse.longitude.toFixed(4)}
+      content: `🔍 Searching for heritage sites around you...
+📍 Using ${locationSource} location: ${locationToUse.latitude.toFixed(
+        4
+      )}, ${locationToUse.longitude.toFixed(4)}
 🌐 Connecting to heritage database...`,
-    })
+    });
 
     try {
-      const apiResponse = await fetchHeritageLocations(locationToUse.latitude, locationToUse.longitude, userId)
+      const apiResponse = await fetchHeritageLocations(
+        locationToUse.latitude,
+        locationToUse.longitude,
+        userId
+      );
 
       if (!apiResponse.spots || apiResponse.spots.length === 0) {
         addMessage({
           type: "assistant",
-          content: `😔 **لا توجد مواقع تراثية قريبة | No Heritage Sites Found**
+          content: `😔 **No Heritage Sites Found**
 
 I couldn't find any heritage sites near your current location. This might be because:
 
@@ -468,9 +517,9 @@ I couldn't find any heritage sites near your current location. This might be bec
 📸 Take a photo of any architectural element you see
 🏛️ Ask me about specific Moroccan heritage sites
 🗺️ Try exploring from a known heritage area like Fes or Marrakech`,
-        })
-        setIsAnalyzing(false)
-        return
+        });
+        setIsAnalyzing(false);
+        return;
       }
 
       const transformedSites = apiResponse.spots.map((spot, index) => ({
@@ -489,16 +538,20 @@ I couldn't find any heritage sites near your current location. This might be bec
         visitDuration: spot.visitDuration,
         highlights: spot.highlights,
         tips: spot.tips,
-      }))
+      }));
 
-      const routeStats = calculateRouteStats(apiResponse.spots)
+      const routeStats = calculateRouteStats(apiResponse.spots);
 
       addMessage({
         type: "assistant",
-        content: `🗺️ **خطة استكشاف التراث | Heritage Exploration Route**
-📍 **Location Source:** ${locationSource === "current" ? "Current GPS" : "Previously Saved"}
+        content: `🗺️ **Heritage Exploration Route**
+📍 **Location Source:** ${
+          locationSource === "current" ? "Current GPS" : "Previously Saved"
+        }
 
-I've discovered ${transformedSites.length} magnificent heritage sites near you! Here's your personalized walking route:
+I've discovered ${
+          transformedSites.length
+        } magnificent heritage sites near you! Here's your personalized walking route:
 
 **📊 Route Summary:**
 🚶‍♂️ Total Walking: ${routeStats.totalWalkingTime} (${routeStats.totalDistance})
@@ -513,12 +566,12 @@ Click on any site below to open in Google Maps, or follow the complete itinerary
           estimatedTotalTime: routeStats.estimatedTotalTime,
           routeType: "walking",
         },
-      })
+      });
     } catch (error) {
-      console.error("API Error:", error)
+      console.error("API Error:", error);
       addMessage({
         type: "assistant",
-        content: `❌ **خطأ في الاتصال | Connection Error**
+        content: `❌ **Connection Error**
 
 I'm having trouble connecting to the heritage database right now. This could be due to:
 
@@ -533,102 +586,103 @@ I'm having trouble connecting to the heritage database right now. This could be 
 🗺️ Explore manually using popular heritage sites
 
 *The service should be back online shortly. Thank you for your patience!*`,
-      })
+      });
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }
+  };
 
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
-      })
+      });
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        setShowCamera(true)
-        setShowPhotoMenu(false)
+        videoRef.current.srcObject = stream;
+        setShowCamera(true);
+        setShowPhotoMenu(false);
       }
     } catch (error) {
-      console.error("Error accessing camera:", error)
+      console.error("Error accessing camera:", error);
     }
-  }
+  };
 
   const stopCamera = () => {
     if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-      tracks.forEach((track) => track.stop())
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => track.stop());
     }
-    setShowCamera(false)
-  }
+    setShowCamera(false);
+  };
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
-      const ctx = canvas.getContext("2d")
+      const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(video, 0, 0)
-        const imageData = canvas.toDataURL("image/jpeg")
-        stopCamera()
+        ctx.drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL("image/jpeg");
+        stopCamera();
 
         addMessage({
           type: "user",
-          content: "ما الذي يمكنك إخباري عنه؟ | What can you tell me about this?",
+          content: "What can you tell me about this?",
           image: imageData,
-        })
+        });
 
-        analyzeImage(imageData)
+        analyzeImage(imageData);
       }
     }
-  }
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const imageData = e.target?.result as string
-        setShowPhotoMenu(false)
+        const imageData = e.target?.result as string;
+        setShowPhotoMenu(false);
 
         addMessage({
           type: "user",
-          content: "ما الذي يمكنك إخباري عنه؟ | What can you tell me about this?",
+          content: "What can you tell me about this?",
           image: imageData,
-        })
+        });
 
-        analyzeImage(imageData)
-      }
-      reader.readAsDataURL(file)
+        analyzeImage(imageData);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const analyzeImage = async (imageData: string) => {
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
     const loadingMessage: Message = {
       id: "loading",
       type: "assistant",
-      content: "أحلل صورتك... | Analyzing your photo...",
+      content: "Analyzing your photo...",
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, loadingMessage])
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
 
-    await new Promise((resolve) => setTimeout(resolve, 3500))
+    await new Promise((resolve) => setTimeout(resolve, 3500));
 
-    setMessages((prev) => prev.filter((msg) => msg.id !== "loading"))
+    setMessages((prev) => prev.filter((msg) => msg.id !== "loading"));
 
     const mockHeritageInfo = {
-      title: "فن الزليج | Zellige Tilework",
-      period: "القرن 10 - الحاضر | 10th Century - Present",
+      title: "Zellige Tilework",
+      period: "10th Century - Present",
       description:
         "This is a magnificent example of traditional Moroccan zellige tilework. Each tile (called 'furmah') is hand-cut from clay sourced from Salé and glazed in vibrant colors, creating intricate geometric patterns that have adorned Moroccan architecture for over a millennium.",
       significance:
         "These geometric patterns reflect Islamic artistic principles of 'tawhid' (unity), avoiding figurative representation while creating infinite, meditative designs that symbolize the unity and continuity of creation. The mathematical precision represents divine order.",
-      location: "Found throughout Moroccan palaces, mosques, riads, and traditional houses",
+      location:
+        "Found throughout Moroccan palaces, mosques, riads, and traditional houses",
       tips: [
         "Notice how each tile is slightly different - they're all hand-cut by master craftsmen (maâlems)",
         "The patterns create optical illusions of movement and infinity",
@@ -636,50 +690,56 @@ I'm having trouble connecting to the heritage database right now. This could be 
         "The imperfections are intentional - they represent human humility before divine perfection",
       ],
       relatedElements: [
-        "تادلاكت | Tadelakt plaster",
-        "نقش الأرز | Cedar wood carvings",
-        "الأقواس المغربية | Horseshoe arches",
+        "Tadelakt plaster",
+        "Cedar wood carvings",
+        "Horseshoe arches",
       ],
       confidence: 0.94,
-    }
+    };
 
     addMessage({
       type: "assistant",
-      content: `✨ **${mockHeritageInfo.title}** من **${mockHeritageInfo.period}**
+      content: `✨ **${mockHeritageInfo.title}** from **${
+        mockHeritageInfo.period
+      }**
 
 ${mockHeritageInfo.description}
 
-**الأهمية الثقافية | Cultural Significance:**
+**Cultural Significance:**
 ${mockHeritageInfo.significance}
 
-**ما يجب ملاحظته | What to observe:**
+**What to observe:**
 ${mockHeritageInfo.tips.map((tip) => `🔹 ${tip}`).join("\n")}
 
-**عناصر مرتبطة | Related Elements:**
+**Related Elements:**
 ${mockHeritageInfo.relatedElements.map((element) => `• ${element}`).join("\n")}
 
 Would you like to know more about the craftsmanship process or the symbolic meaning of these specific patterns? 🎨✨`,
       heritageInfo: mockHeritageInfo,
-    })
+    });
 
-    setIsAnalyzing(false)
-  }
+    setIsAnalyzing(false);
+  };
 
   const handleSendMessage = async () => {
     if (inputValue.trim()) {
-      const userMessage = inputValue.trim()
+      const userMessage = inputValue.trim();
 
       addMessage({
         type: "user",
         content: userMessage,
-      })
+      });
 
-      setInputValue("")
-      setIsAnalyzing(true)
+      setInputValue("");
+      setIsAnalyzing(true);
 
       try {
-        const chatResponse = await sendChatMessage(userMessage, userId, currentLocation)
-        
+        const chatResponse = await sendChatMessage(
+          userMessage,
+          userId,
+          currentLocation
+        );
+
         if (chatResponse.spots && chatResponse.spots.length > 0) {
           // Add a message with the route map
           addMessage({
@@ -688,60 +748,74 @@ Would you like to know more about the craftsmanship process or the symbolic mean
             heritageRoute: {
               sites: chatResponse.spots.map((spot: any) => ({
                 ...spot,
-                id: spot.name.toLowerCase().replace(/\s+/g, '-'),
+                id: spot.name.toLowerCase().replace(/\s+/g, "-"),
                 coordinates: spot.coordinates || { lat: 0, lng: 0 },
                 highlights: spot.highlights || [],
-                tips: spot.tips || ''
+                tips: spot.tips || "",
               })),
-              totalDistance: chatResponse.spots.reduce((sum: number, spot: any) => {
-                const dist = parseFloat(spot.distance) || 0;
-                return sum + dist;
-              }, 0).toFixed(1) + 'km',
-              totalWalkingTime: chatResponse.spots.reduce((sum: number, spot: any) => {
-                const time = parseInt(spot.walkingTime) || 0;
-                return sum + time;
-              }, 0) + ' min',
-              estimatedTotalTime: chatResponse.spots.reduce((sum: number, spot: any) => {
-                const duration = spot.visitDuration.split('-')[0];
-                const time = parseInt(duration) || 0;
-                return sum + time;
-              }, 0) + ' min',
-              routeType: "Heritage Exploration"
-            }
+              totalDistance:
+                chatResponse.spots
+                  .reduce((sum: number, spot: any) => {
+                    const dist = parseFloat(spot.distance) || 0;
+                    return sum + dist;
+                  }, 0)
+                  .toFixed(1) + "km",
+              totalWalkingTime:
+                chatResponse.spots.reduce((sum: number, spot: any) => {
+                  const time = parseInt(spot.walkingTime) || 0;
+                  return sum + time;
+                }, 0) + " min",
+              estimatedTotalTime:
+                chatResponse.spots.reduce((sum: number, spot: any) => {
+                  const duration = spot.visitDuration.split("-")[0];
+                  const time = parseInt(duration) || 0;
+                  return sum + time;
+                }, 0) + " min",
+              routeType: "Heritage Exploration",
+            },
           });
         }
 
         // Add the text response if available
-        if (chatResponse.response || chatResponse.ai_response || chatResponse.message) {
+        if (
+          chatResponse.response ||
+          chatResponse.ai_response ||
+          chatResponse.message
+        ) {
           addMessage({
             type: "assistant",
-            content: chatResponse.response || chatResponse.ai_response || chatResponse.message,
+            content:
+              chatResponse.response ||
+              chatResponse.ai_response ||
+              chatResponse.message,
           });
         }
       } catch (error) {
-        console.error("Chat API Error:", error)
+        console.error("Chat API Error:", error);
 
         addMessage({
           type: "assistant",
           content:
-            "سؤال ممتاز! | That's a wonderful question! I'd be delighted to help you discover more about Moroccan heritage. Feel free to share a photo of any architectural element, decorative detail, or historical site you'd like to explore, or ask me about specific aspects of what you've already discovered. 🏛️✨\n\n*Remember: Every stone, tile, and carving in Morocco tells a story of centuries-old craftsmanship and cultural heritage!*",
-        })
+            "That's a wonderful question! I'd be delighted to help you discover more about Moroccan heritage. Feel free to share a photo of any architectural element, decorative detail, or historical site you'd like to explore, or ask me about specific aspects of what you've already discovered. 🏛️✨\n\n*Remember: Every stone, tile, and carving in Morocco tells a story of centuries-old craftsmanship and cultural heritage!*",
+        });
       } finally {
-        setIsAnalyzing(false)
+        setIsAnalyzing(false);
       }
     }
-  }
+  };
 
   if (isLoadingHistory) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-red-900/90 via-rose-800/90 to-orange-900/90">
         <div className="text-center">
           <GeometricLoader />
-          <p className="text-white mt-4 text-lg">Loading your heritage journey...</p>
+          <p className="text-white mt-4 text-lg">
+            Loading your heritage journey...
+          </p>
           <p className="text-rose-200 text-sm">User ID: {userId}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -768,9 +842,11 @@ Would you like to know more about the craftsmanship process or the symbolic mean
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-red-800 to-rose-700 bg-clip-text text-transparent truncate">
-                دليل التراث | Heritage Guide
+                Heritage Guide
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600 font-medium">Your AI Medina companion</p>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                Your AI Medina companion
+              </p>
             </div>
             <div className="text-right flex-shrink-0">
               <div className="flex items-center gap-1 text-rose-600">
@@ -795,11 +871,13 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 />
                 {message.heritageRoute && (
                   <div className="mt-2 ml-12">
-                    <RouteCard 
+                    <RouteCard
                       stops={message.heritageRoute.sites}
                       totalDistance={message.heritageRoute.totalDistance}
                       totalWalkingTime={message.heritageRoute.totalWalkingTime}
-                      estimatedTotalTime={message.heritageRoute.estimatedTotalTime}
+                      estimatedTotalTime={
+                        message.heritageRoute.estimatedTotalTime
+                      }
                     />
                   </div>
                 )}
@@ -823,7 +901,12 @@ Would you like to know more about the craftsmanship process or the symbolic mean
       {showCamera && (
         <div className="absolute inset-0 bg-black z-50 flex flex-col">
           <div className="flex-1 relative">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
 
             <div className="absolute inset-4 border-2 border-rose-400/60 rounded-lg pointer-events-none">
               <div className="absolute top-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-l-4 border-t-4 border-rose-400 rounded-tl-lg"></div>
@@ -838,8 +921,12 @@ Would you like to know more about the craftsmanship process or the symbolic mean
 
             <div className="absolute top-4 sm:top-8 left-4 right-4 text-center">
               <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2">
-                <p className="text-white text-xs sm:text-sm font-medium">📸 Position heritage element in frame</p>
-                <p className="text-rose-300 text-xs">Focus on architectural details, patterns, or decorations</p>
+                <p className="text-white text-xs sm:text-sm font-medium">
+                  📸 Position heritage element in frame
+                </p>
+                <p className="text-rose-300 text-xs">
+                  Focus on architectural details, patterns, or decorations
+                </p>
               </div>
             </div>
           </div>
@@ -853,7 +940,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm text-sm sm:text-base"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                إلغاء | Cancel
+                Cancel
               </Button>
 
               <Button
@@ -862,7 +949,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 className="bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white px-6 sm:px-8 shadow-lg border-2 border-rose-300/50 text-sm sm:text-base"
               >
                 <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                التقط | Capture
+                Capture
               </Button>
             </div>
           </div>
@@ -878,7 +965,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 onClick={getCurrentLocation}
                 isLoading={isLocating}
                 icon={<MapPin className="w-3 h-3 sm:w-4 sm:h-4" />}
-                text={currentLocation ? "تحديث الموقع | Update" : "حدد موقعي | Locate Me"}
+                text={currentLocation ? "Update Location" : "Locate Me"}
                 variant="outline"
                 className="flex-1 border-red-300 text-red-700 hover:bg-red-50 text-xs sm:text-sm"
               />
@@ -886,7 +973,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 onClick={exploreSurrounding}
                 isLoading={false}
                 icon={<Navigation className="w-3 h-3 sm:w-4 sm:h-4" />}
-                text="استكشف المحيط | Explore"
+                text="Explore Surrounding"
                 variant="default"
                 className="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
                 disabled={false}
@@ -898,7 +985,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="اسأل عن التراث المغربي... | Ask about Moroccan heritage..."
+                  placeholder="Ask about Moroccan heritage..."
                   className="pr-10 sm:pr-12 bg-white/90 border-2 border-rose-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-200 rounded-xl text-sm sm:text-base h-10 sm:h-12"
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 />
@@ -931,8 +1018,14 @@ Would you like to know more about the craftsmanship process or the symbolic mean
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
       <canvas ref={canvasRef} className="hidden" />
     </div>
-  )
+  );
 }
