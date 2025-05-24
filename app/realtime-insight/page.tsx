@@ -21,9 +21,9 @@ const MoroccanHeritageGuide = () => {
   const [description, setDescription] = useState("");
   const [conversation, setConversation] = useState([]);
   const [error, setError] = useState("");
-  const [captureInterval, setCaptureInterval] = useState(5000);
+  const [captureInterval, setCaptureInterval] = useState(600);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [changeThreshold, setChangeThreshold] = useState(0.3);
+  const [changeThreshold, setChangeThreshold] = useState(0.1);
   const [currentTranscript, setCurrentTranscript] = useState("");
 
   const videoRef = useRef(null);
@@ -157,8 +157,7 @@ const MoroccanHeritageGuide = () => {
         setError("");
 
         // Add welcome message with Morocco-specific guidance
-        const welcomeMsg =
-          "Welcome to your personal Moroccan Heritage Guide! I can see what's in front of you and share the rich stories of Morocco's culture.";
+        const welcomeMsg = "Welcome to your personal Moroccan Heritage Guide!";
         setConversation([
           { type: "assistant", content: welcomeMsg, timestamp: new Date() },
         ]);
@@ -534,6 +533,11 @@ COMMUNICATION STYLE:
     }
   }, [conversation]);
 
+  // New hook to automatically start the guide on page load
+  useEffect(() => {
+    startStream();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 p-6">
       <div className="max-w-6xl mx-auto">
@@ -581,7 +585,7 @@ COMMUNICATION STYLE:
             {/* Controls */}
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div>
+                <div className="hidden">
                   <label className="block text-white font-medium mb-2">
                     Scan Interval (ms)
                   </label>
@@ -596,7 +600,7 @@ COMMUNICATION STYLE:
                   />
                 </div>
 
-                <div>
+                <div className="hidden">
                   <label className="block text-white font-medium mb-2">
                     Scene Sensitivity
                   </label>
@@ -611,7 +615,7 @@ COMMUNICATION STYLE:
                   </select>
                 </div>
 
-                <div className="flex items-end">
+                <div className="hidden flex items-end">
                   <button
                     onClick={() => setAudioEnabled(!audioEnabled)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
@@ -628,59 +632,28 @@ COMMUNICATION STYLE:
                     Audio {audioEnabled ? "On" : "Off"}
                   </button>
                 </div>
-
-                <div className="flex gap-2">
-                  {!isStreaming ? (
-                    <button
-                      onClick={startStream}
-                      className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
-                    >
-                      <Play className="w-4 h-4" />
-                      Start Guide
-                    </button>
-                  ) : (
-                    <button
-                      onClick={stopStream}
-                      className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
-                    >
-                      <Square className="w-4 h-4" />
-                      Stop
-                    </button>
-                  )}
-                </div>
               </div>
 
               {isStreaming && (
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={toggleListening}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold transition-all ${
                       isListening
                         ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
                         : "bg-blue-500 hover:bg-blue-600 text-white"
                     }`}
                   >
                     {isListening ? (
-                      <MicOff className="w-4 h-4" />
+                      <MicOff className="w-5 h-5" />
                     ) : (
-                      <Mic className="w-4 h-4" />
+                      <Mic className="w-5 h-5" />
                     )}
                     {isListening ? "Stop Listening" : "Ask Questions"}
                   </button>
-
-                  <button
-                    onClick={clearConversation}
-                    className="flex items-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-all"
-                  >
-                    Clear Chat
-                  </button>
-
-                  {(isAnalyzing || isSpeaking) && (
-                    <div className="flex items-center gap-2 text-white">
-                      <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin"></div>
-                      {isAnalyzing ? "Analyzing..." : "Speaking..."}
-                    </div>
-                  )}
+                  <p className="text-xs text-red-500 italic mt-1">
+                    Warning: This feature is not stable
+                  </p>
                 </div>
               )}
             </div>
