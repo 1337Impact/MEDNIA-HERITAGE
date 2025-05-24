@@ -158,7 +158,7 @@ const MoroccanHeritageGuide = () => {
 
         // Add welcome message with Morocco-specific guidance
         const welcomeMsg =
-          "Welcome to your personal Moroccan Heritage Guide! 🇲🇦 I can see what's in front of you and share the rich stories of Morocco's culture.";
+          "Welcome to your personal Moroccan Heritage Guide! I can see what's in front of you and share the rich stories of Morocco's culture.";
         setConversation([
           { type: "assistant", content: welcomeMsg, timestamp: new Date() },
         ]);
@@ -548,193 +548,142 @@ COMMUNICATION STYLE:
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="block text-white font-medium mb-2">
-                Scan Interval (ms)
-              </label>
-              <input
-                type="number"
-                value={captureInterval}
-                onChange={(e) => setCaptureInterval(Number(e.target.value))}
-                min="3000"
-                max="15000"
-                step="1000"
-                className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-white font-medium mb-2">
-                Scene Sensitivity
-              </label>
-              <select
-                value={changeThreshold}
-                onChange={(e) => setChangeThreshold(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                <option value={0.1}>High (Sensitive)</option>
-                <option value={0.3}>Medium (Balanced)</option>
-                <option value={0.5}>Low (Major changes only)</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                onClick={() => setAudioEnabled(!audioEnabled)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  audioEnabled
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-500 text-white"
-                }`}
-              >
-                {audioEnabled ? (
-                  <Volume2 className="w-4 h-4" />
-                ) : (
-                  <VolumeX className="w-4 h-4" />
-                )}
-                Audio {audioEnabled ? "On" : "Off"}
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              {!isStreaming ? (
-                <button
-                  onClick={startStream}
-                  className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
-                >
-                  <Play className="w-4 h-4" />
-                  Start Guide
-                </button>
-              ) : (
-                <button
-                  onClick={stopStream}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
-                >
-                  <Square className="w-4 h-4" />
-                  Stop
-                </button>
-              )}
-            </div>
-          </div>
-
-          {isStreaming && (
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={toggleListening}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                  isListening
-                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
-                }`}
-              >
-                {isListening ? (
-                  <MicOff className="w-4 h-4" />
-                ) : (
-                  <Mic className="w-4 h-4" />
-                )}
-                {isListening ? "Stop Listening" : "Ask Questions"}
-              </button>
-
-              <button
-                onClick={clearConversation}
-                className="flex items-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-all"
-              >
-                Clear Chat
-              </button>
-
-              {(isAnalyzing || isSpeaking) && (
-                <div className="flex items-center gap-2 text-white">
-                  <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin"></div>
-                  {isAnalyzing ? "Analyzing..." : "Speaking..."}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Video Feed */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Camera className="w-5 h-5" />
-              Camera View
-            </h2>
-            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                muted
-                playsInline
-              />
-            </div>
-            <canvas ref={canvasRef} className="hidden" />
-
-            {description && (
-              <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/20">
-                <h3 className="text-white font-medium mb-2">Current Scene:</h3>
-                <p className="text-white/90 text-sm">{description}</p>
+        {/* New wrapper for reordering on mobile vs. desktop with extra gap */}
+        <div className="flex flex-col gap-6">
+          <div className="order-1">
+            {/* Video Feed (Camera View) */}
+            <div className="mx-auto lg:w-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Camera View
+              </h2>
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                />
               </div>
-            )}
-          </div>
+              <canvas ref={canvasRef} className="hidden" />
 
-          {/* Conversation */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
-              Conversation
-            </h2>
-
-            <div className="bg-black/20 rounded-lg p-4 h-80 overflow-y-auto border border-white/20">
-              {conversation.length === 0 ? (
-                <p className="text-white/50 italic text-center">
-                  {isStreaming
-                    ? "🕌 Ready to explore Morocco's heritage! Point your camera at traditional elements and ask questions..."
-                    : "🇲🇦 Start your Moroccan heritage journey by activating the guide"}
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {conversation.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3 rounded-lg ${
-                        msg.type === "user"
-                          ? "bg-blue-500/20 border-l-4 border-blue-400 text-blue-100"
-                          : "bg-orange-500/20 border-l-4 border-orange-400 text-orange-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-xs">
-                          {msg.type === "user" ? "You" : "Guide"}
-                        </span>
-                        <span className="text-xs opacity-60">
-                          {msg.timestamp instanceof Date
-                            ? msg.timestamp.toLocaleTimeString()
-                            : new Date(msg.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                    </div>
-                  ))}
+              {description && (
+                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/20">
+                  <h3 className="text-white font-medium mb-2">
+                    Current Scene:
+                  </h3>
+                  <p className="text-white/90 text-sm">{description}</p>
                 </div>
               )}
             </div>
+          </div>
+          <div className="order-2">
+            {/* Controls */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    Scan Interval (ms)
+                  </label>
+                  <input
+                    type="number"
+                    value={captureInterval}
+                    onChange={(e) => setCaptureInterval(Number(e.target.value))}
+                    min="3000"
+                    max="15000"
+                    step="1000"
+                    className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
 
-            {isListening && (
-              <div className="mt-4 text-center">
-                <div className="inline-flex items-center gap-2 text-green-300">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  {currentTranscript ? (
-                    <span>Heard: "{currentTranscript}"</span>
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    Scene Sensitivity
+                  </label>
+                  <select
+                    value={changeThreshold}
+                    onChange={(e) => setChangeThreshold(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value={0.1}>High (Sensitive)</option>
+                    <option value={0.3}>Medium (Balanced)</option>
+                    <option value={0.5}>Low (Major changes only)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-end">
+                  <button
+                    onClick={() => setAudioEnabled(!audioEnabled)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      audioEnabled
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-500 text-white"
+                    }`}
+                  >
+                    {audioEnabled ? (
+                      <Volume2 className="w-4 h-4" />
+                    ) : (
+                      <VolumeX className="w-4 h-4" />
+                    )}
+                    Audio {audioEnabled ? "On" : "Off"}
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  {!isStreaming ? (
+                    <button
+                      onClick={startStream}
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                    >
+                      <Play className="w-4 h-4" />
+                      Start Guide
+                    </button>
                   ) : (
-                    <span>Listening for your question...</span>
+                    <button
+                      onClick={stopStream}
+                      className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                    >
+                      <Square className="w-4 h-4" />
+                      Stop
+                    </button>
                   )}
                 </div>
               </div>
-            )}
+
+              {isStreaming && (
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    onClick={toggleListening}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                      isListening
+                        ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                        : "bg-blue-500 hover:bg-blue-600 text-white"
+                    }`}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-4 h-4" />
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                    {isListening ? "Stop Listening" : "Ask Questions"}
+                  </button>
+
+                  <button
+                    onClick={clearConversation}
+                    className="flex items-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-all"
+                  >
+                    Clear Chat
+                  </button>
+
+                  {(isAnalyzing || isSpeaking) && (
+                    <div className="flex items-center gap-2 text-white">
+                      <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin"></div>
+                      {isAnalyzing ? "Analyzing..." : "Speaking..."}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -744,79 +693,6 @@ COMMUNICATION STYLE:
             <p className="text-red-200">{error}</p>
           </div>
         )}
-
-        {/* Tourism Usage Guide */}
-        <div className="mt-8 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-          <h3 className="text-lg font-semibold text-white mb-3">
-            🧭 How to Use Your Heritage Guide:
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white/80 text-sm">
-            <div>
-              <h4 className="font-medium text-green-300 mb-2">
-                📱 Getting Started:
-              </h4>
-              <ul className="space-y-1">
-                <li>• Enter your API key</li>
-                <li>• Click "Start Guide"</li>
-                <li>• Allow camera access</li>
-                <li>• Point at heritage elements</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-blue-300 mb-2">
-                🎯 Best Results:
-              </h4>
-              <ul className="space-y-1">
-                <li>• Focus on traditional patterns</li>
-                <li>• Capture architectural details</li>
-                <li>• Show crafts and artifacts</li>
-                <li>• Ask specific questions</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-orange-300 mb-2">
-                🗣️ Voice Features:
-              </h4>
-              <ul className="space-y-1">
-                <li>• Click "Ask Questions" to talk</li>
-                <li>• Ask about cultural significance</li>
-                <li>• Request historical context</li>
-                <li>• Get audio descriptions</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Features Info */}
-        <div className="mt-6 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-          <h3 className="text-lg font-semibold text-white mb-3">
-            🇲🇦 Moroccan Heritage Expertise:
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white/80 text-sm">
-            <div>
-              <h4 className="font-medium text-orange-300 mb-2">
-                🏛️ Architecture & Sites:
-              </h4>
-              <ul className="space-y-1">
-                <li>• Riads, kasbahs, and medinas</li>
-                <li>• Islamic geometric patterns</li>
-                <li>• UNESCO heritage sites</li>
-                <li>• Traditional building techniques</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-orange-300 mb-2">
-                🎨 Crafts & Culture:
-              </h4>
-              <ul className="space-y-1">
-                <li>• Zellige tilework & mosaics</li>
-                <li>• Berber textiles & carpets</li>
-                <li>• Traditional pottery & metalwork</li>
-                <li>• Arabic calligraphy & symbols</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
