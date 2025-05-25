@@ -11,7 +11,6 @@ import {
   Navigation,
   Star,
   LineChart,
-  Link,
 } from "lucide-react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,7 @@ import { RouteCard } from "@/app/components/route-card";
 import { LocationButton } from "@/components/location-button";
 import { PhotoMenu } from "@/components/photo-menu";
 import { TypingIndicator } from "@/components/typing-indicator";
+import Link from "next/link";
 
 interface Message {
   id: string;
@@ -303,11 +303,16 @@ export default function MedinaGuide({ params }: PageProps) {
   );
   const [isLocating, setIsLocating] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -432,6 +437,7 @@ export default function MedinaGuide({ params }: PageProps) {
   };
 
   const exploreSurrounding = async () => {
+
     await getCurrentLocation();
     let locationToUse = currentLocation;
 
@@ -777,6 +783,78 @@ Would you like to know more about the craftsmanship process or the symbolic mean
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    try {
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('user_id', userId);
+
+      // Add loading message
+      addMessage({
+        type: "user",
+        content: "Analyzing uploaded image...",
+        image: URL.createObjectURL(file)
+      });
+
+      // Make API request
+      const response = await fetch(`${API_BASE_URL}/analyze-image`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      
+      // Add API response to chat
+      addMessage({
+        type: "assistant",
+        content: data.message || "Here's what I found in your image...",
+        heritageInfo: data.heritageInfo
+      });
+
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      addMessage({
+        type: "assistant",
+        content: "Sorry, I couldn't process your image. Please try again."
+      });
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await handleImageUpload(file);
+      setShowImageModal(false);
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+            await handleImageUpload(file);
+            stopCamera();
+            setShowImageModal(false);
+          }
+        }, 'image/jpeg');
+      }
+    }
+  };
+
   if (isLoadingHistory) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-red-900/90 via-rose-800/90 to-orange-900/90">
@@ -808,7 +886,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
 
       {/* Header with Moroccan styling */}
       <header className="bg-white/95 backdrop-blur-md shadow-lg border-b-2 border-rose-400/30 relative z-10 flex-shrink-0">
-        <div className="w-full max-w-4xl mx-auto px-4 py-3 sm:py-4">
+        <div className="flex justify-between items-center w-full max-w-4xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-rose-600 via-red-600 to-orange-700 rounded-full flex items-center justify-center shadow-lg border-2 border-rose-300/50">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -821,15 +899,14 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 Your AI Medina companion
               </p>
             </div>
-            <div className="flex-shrink-0">
-              <Link
-                href="/realtime-insight"
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100 transition-colors"
-              >
-                <LineChart className="w-4 h-4" />
-                <span>Insights</span>
-              </Link>
-            </div>
+          </div>
+          <div className="">
+            <Link
+              href="/realtime-insight"
+              className="text-md font-semibold p-2 px-5 text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+            >
+              Ask AI Guide!
+            </Link>
           </div>
         </div>
       </header>
@@ -837,7 +914,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
       {/* Chat Messages - Scrollable Area */}
       <div className="flex-1 overflow-hidden relative z-10">
         <div className="h-full overflow-y-auto px-4 py-4 sm:py-6">
-          <div className="w-full max-w-4xl mx-auto space-y-4">
+          <div className="w-full max-w-4xl pb-24 mx-auto space-y-4">
             {messages.map((message) => (
               <div key={message.id} className="w-full">
                 <ChatMessage
@@ -856,15 +933,6 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                     />
                   </div>
                 )}
-                {message.image && (
-                  <div className="relative w-full h-64 rounded-lg overflow-hidden mt-2 ml-12">
-                    <img
-                      src={message.image}
-                      alt="Uploaded content"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
               </div>
             ))}
             {isAnalyzing && (
@@ -875,121 +943,171 @@ Would you like to know more about the craftsmanship process or the symbolic mean
             <div ref={messagesEndRef} />
             <div className="h-4 sm:h-6" />
           </div>
+
+          {showCamera && (
+            <div className="absolute inset-0 bg-black z-50 flex flex-col">
+              <div className="flex-1 relative">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+
+                <div className="absolute inset-4 border-2 border-rose-400/60 rounded-lg pointer-events-none">
+                  <div className="absolute top-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-l-4 border-t-4 border-rose-400 rounded-tl-lg"></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-r-4 border-t-4 border-rose-400 rounded-tr-lg"></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-l-4 border-b-4 border-rose-400 rounded-bl-lg"></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-r-4 border-b-4 border-rose-400 rounded-br-lg"></div>
+
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 border-2 border-rose-400/80 rounded-full">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-rose-400 rounded-full"></div>
+                  </div>
+                </div>
+
+                <div className="absolute top-4 sm:top-8 left-4 right-4 text-center">
+                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2">
+                    <p className="text-white text-xs sm:text-sm font-medium">
+                      📸 Position heritage element in frame
+                    </p>
+                    <p className="text-rose-300 text-xs">
+                      Focus on architectural details, patterns, or decorations
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent flex-shrink-0">
+                <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-4 sm:gap-6">
+                  <Button
+                    onClick={stopCamera}
+                    variant="outline"
+                    size="lg"
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm text-sm sm:text-base"
+                  >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Cancel
+                  </Button>
+
+                  <Button
+                    onClick={capturePhoto}
+                    size="lg"
+                    className="bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white px-6 sm:px-8 shadow-lg border-2 border-rose-300/50 text-sm sm:text-base"
+                  >
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Capture
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Input Area */}
+          <div className="p-4 fixed bottom-0 w-full">
+            <div className="w-full max-w-4xl mx-auto">
+               <div className="flex items-end gap-2 bg-white rounded-xl shadow-lg border">
+                 <div className="flex gap-1 px-2 py-2">
+                   <div className="relative group">
+                     <button
+                       onClick={() => setShowImageModal(true)}
+                       className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                     >
+                       <ImageIcon className="w-5 h-5" />
+                     </button>
+                     <div className="absolute bottom-full mb-2 hidden group-hover:block">
+                       <div className="bg-gray-900 text-white text-sm py-1 px-2 rounded-md whitespace-nowrap">
+                         Upload Photo
+                       </div>
+                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                     </div>
+                   </div>
+                   <div className="relative group">
+                     <button
+                       onClick={exploreSurrounding}
+                       className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                     >
+                       <Navigation className="w-5 h-5" />
+                     </button>
+                     <div className="absolute bottom-full mb-2 hidden group-hover:block">
+                       <div className="bg-gray-900 text-white text-sm py-1 px-2 rounded-md whitespace-nowrap">
+                         Explore Surrounding
+                       </div>
+                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="flex-1 flex items-center">
+                   <input
+                     value={inputValue}
+                     onChange={(e) => setInputValue(e.target.value)}
+                     placeholder="Ask about Moroccan heritage..."
+                     className="flex-1 px-2 py-3 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
+                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                   />
+                 </div>
+
+                 <button
+                   onClick={handleSendMessage}
+                   disabled={!inputValue.trim()}
+                   className="p-2 m-2 bg-black hover:bg-gray-800 text-white rounded-lg flex items-center justify-center disabled:opacity-50 disabled:hover:bg-black transition-colors"
+                 >
+                   <Send className="w-4 h-4" />
+                 </button>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {showCamera && (
-        <div className="absolute inset-0 bg-black z-50 flex flex-col">
-          <div className="flex-1 relative">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-
-            <div className="absolute inset-4 border-2 border-rose-400/60 rounded-lg pointer-events-none">
-              <div className="absolute top-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-l-4 border-t-4 border-rose-400 rounded-tl-lg"></div>
-              <div className="absolute top-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-r-4 border-t-4 border-rose-400 rounded-tr-lg"></div>
-              <div className="absolute bottom-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-l-4 border-b-4 border-rose-400 rounded-bl-lg"></div>
-              <div className="absolute bottom-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-r-4 border-b-4 border-rose-400 rounded-br-lg"></div>
-
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 border-2 border-rose-400/80 rounded-full">
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-rose-400 rounded-full"></div>
+      {/* Image Upload Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-sm mx-4 overflow-hidden">
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Upload Image</h3>
+                <button 
+                  onClick={() => setShowImageModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
-
-            <div className="absolute top-4 sm:top-8 left-4 right-4 text-center">
-              <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2">
-                <p className="text-white text-xs sm:text-sm font-medium">
-                  📸 Position heritage element in frame
-                </p>
-                <p className="text-rose-300 text-xs">
-                  Focus on architectural details, patterns, or decorations
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent flex-shrink-0">
-            <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-4 sm:gap-6">
-              <Button
-                onClick={stopCamera}
-                variant="outline"
-                size="lg"
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm text-sm sm:text-base"
+            
+            <div className="p-4 space-y-3">
+              <button
+                onClick={() => {
+                  startCamera();
+                  setShowImageModal(false);
+                }}
+                className="w-full py-3 px-4 bg-black text-white rounded-xl flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Cancel
-              </Button>
-
-              <Button
-                onClick={capturePhoto}
-                size="lg"
-                className="bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white px-6 sm:px-8 shadow-lg border-2 border-rose-300/50 text-sm sm:text-base"
-              >
-                <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Capture
-              </Button>
+                <Camera className="w-5 h-5" />
+                Take Photo
+              </button>
+              
+              <label className="block">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-3 px-4 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  Upload from Device
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </label>
             </div>
           </div>
         </div>
       )}
-
-      {/* Fixed Input Area at Bottom */}
-      <div className="bg-white/95 backdrop-blur-md border-t-2 border-rose-400/30 relative z-10 shadow-lg flex-shrink-0">
-        <div className="w-full max-w-4xl mx-auto p-3 sm:p-4">
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <LocationButton
-                onClick={() => setShowPhotoMenu(!showPhotoMenu)}
-                isLoading={false}
-                text="Upload Photo"
-                icon={<ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />}
-                variant="default"
-                disabled={false}
-                className="rounded-md flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
-              />
-              <LocationButton
-                onClick={exploreSurrounding}
-                isLoading={false}
-                icon={<Navigation className="w-3 h-3 sm:w-4 sm:h-4" />}
-                text="Explore Surrounding"
-                variant="default"
-                className="rounded-md flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-xs sm:text-sm"
-                disabled={false}
-              />
-            </div>
-
-            <div className="flex items-end gap-2 sm:gap-3">
-              <div className="flex-1 relative">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask about Moroccan heritage..."
-                  className="pr-10 sm:pr-12 bg-white/90 border-2 border-rose-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-200 rounded-xl text-sm sm:text-base h-10 sm:h-12"
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                />
-              </div>
-
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim()}
-                className="bg-gradient-to-r from-rose-600 via-red-600 to-orange-700 hover:from-rose-700 hover:via-red-700 hover:to-orange-800 text-white h-10 w-10 sm:h-12 sm:w-12 p-0 rounded-xl shadow-lg border-2 border-rose-300/50 flex-shrink-0"
-              >
-                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
-            </div>
-
-            <PhotoMenu
-              isOpen={showPhotoMenu}
-              onClose={() => setShowPhotoMenu(false)}
-              onTakePhoto={startCamera}
-              onUploadPhoto={() => fileInputRef.current?.click()}
-            />
-          </div>
-        </div>
-      </div>
 
       <input
         ref={fileInputRef}
