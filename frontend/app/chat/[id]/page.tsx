@@ -10,6 +10,8 @@ import {
   MapPin,
   Navigation,
   Star,
+  LineChart,
+  Link,
 } from "lucide-react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -365,17 +367,6 @@ export default function MedinaGuide({ params }: PageProps) {
 
     const savedLocation = loadLocationFromCookies(setCurrentLocation);
     if (savedLocation) {
-      addMessage({
-        type: "assistant",
-        content: `🧭 **Saved Location Found!**
-
-**Coordinates:** ${savedLocation.latitude.toFixed(
-          6
-        )}, ${savedLocation.longitude.toFixed(6)}
-**Source:** Previously saved location
-
-Great! I'm using your previously saved location. Click "Explore Surrounding" to discover heritage sites, or use "Update Location" to get your current position! 🗺️✨`,
-      });
       setIsLocating(false);
       return;
     }
@@ -401,19 +392,6 @@ Great! I'm using your previously saved location. Click "Explore Surrounding" to 
       setCookie("heritage_longitude", locationData.longitude.toString());
 
       setCurrentLocation(locationData);
-
-      addMessage({
-        type: "assistant",
-        content: `🧭 **Location Found!**
-
-**Coordinates:** ${locationData.latitude.toFixed(
-          6
-        )}, ${locationData.longitude.toFixed(6)}
-**Accuracy:** ±${Math.round(locationData.accuracy)}m
-**Saved:** Location saved for future visits
-
-Perfect! I've found and saved your location. Now you can discover the magnificent heritage sites around you. Click "Explore Surrounding" to uncover the historical treasures nearby! 🗺️✨`,
-      });
     } catch (error) {
       let errorMessage = "I can't find your location. ";
 
@@ -488,15 +466,6 @@ Which area would you like to explore? 🕌✨`,
 
     const locationSource = currentLocation ? "current" : "saved";
 
-    addMessage({
-      type: "assistant",
-      content: `🔍 Searching for heritage sites around you...
-📍 Using ${locationSource} location: ${locationToUse.latitude.toFixed(
-        4
-      )}, ${locationToUse.longitude.toFixed(4)}
-🌐 Connecting to heritage database...`,
-    });
-
     try {
       const apiResponse = await fetchHeritageLocations(
         locationToUse.latitude,
@@ -547,20 +516,22 @@ I couldn't find any heritage sites near your current location. This might be bec
       addMessage({
         type: "assistant",
         content: `🗺️ **Heritage Exploration Route**
-📍 **Location Source:** ${
-          locationSource === "current" ? "Current GPS" : "Previously Saved"
-        }
+      📍 **Location Source:** ${
+        locationSource === "current" ? "Current GPS" : "Previously Saved"
+      }
 
-I've discovered ${
-          transformedSites.length
-        } magnificent heritage sites near you! Here's your personalized walking route:
+      I've discovered ${
+        transformedSites.length
+      } magnificent heritage sites near you! Here's your personalized walking route:
 
-**📊 Route Summary:**
-🚶‍♂️ Total Walking: ${routeStats.totalWalkingTime} (${routeStats.totalDistance})
-⏱️ Estimated Visit Time: ${routeStats.estimatedTotalTime}
-🎯 Sites: ${transformedSites.length} heritage locations
+      **📊 Route Summary:**
+      🚶‍♂️ Total Walking: ${routeStats.totalWalkingTime} (${
+          routeStats.totalDistance
+        })
+      ⏱️ Estimated Visit Time: ${routeStats.estimatedTotalTime}
+      🎯 Sites: ${transformedSites.length} heritage locations
 
-Click on any site below to open in Google Maps, or follow the complete itinerary! 🗺️✨`,
+      Click on any site below to open in Google Maps, or follow the complete itinerary! 🗺️✨`,
         heritageRoute: {
           sites: transformedSites,
           totalDistance: routeStats.totalDistance,
@@ -850,12 +821,14 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                 Your AI Medina companion
               </p>
             </div>
-            <div className="text-right flex-shrink-0">
-              <div className="flex items-center gap-1 text-rose-600">
-                <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
-                <span className="text-xs sm:text-sm font-semibold">4.9</span>
-              </div>
-              <p className="text-xs text-gray-500">User: {userId}</p>
+            <div className="flex-shrink-0">
+              <Link
+                href="/realtime-insight"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100 transition-colors"
+              >
+                <LineChart className="w-4 h-4" />
+                <span>Insights</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -877,7 +850,9 @@ Would you like to know more about the craftsmanship process or the symbolic mean
                       stops={message.heritageRoute.sites}
                       totalDistance={message.heritageRoute.totalDistance}
                       totalWalkingTime={message.heritageRoute.totalWalkingTime}
-                      estimatedTotalTime={message.heritageRoute.estimatedTotalTime}
+                      estimatedTotalTime={
+                        message.heritageRoute.estimatedTotalTime
+                      }
                     />
                   </div>
                 )}
