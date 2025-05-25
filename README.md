@@ -1,6 +1,6 @@
 # 🧭 MedinaGo
 
-<img src="frontend/public/medinago.png" alt="Medina Navigator" width="120" />
+<img src="frontend/public/medinago.png" alt="MedinaGo" width="120" />
 
 
 **MedinaGo** is an AI-powered cultural companion designed to enrich travelers’ experiences exploring Morocco’s historic medinas. It offers real-time insights into local heritage, smart navigation, and immersive storytelling—all through a mobile-first interface.
@@ -9,13 +9,13 @@
 
 ## 📸 How it works in real life
 
-![Traveler using Medina Navigator in Moroccan medina](./readme-heritage.png)
+![Traveler using MedinaGo in Moroccan medina](./readme-heritage.png)
 
 ---
 
 ## 🧩 Project Overview
 
-Medina Navigator blends AI technologies with Morocco’s rich cultural heritage. Users can scan landmarks, receive contextual cultural information, and navigate historical sites with curated content—simply by pointing their camera or walking through the medina.
+MedinaGo blends AI technologies with Morocco’s rich cultural heritage. Users can scan landmarks, receive contextual cultural information, and navigate historical sites with curated content—simply by pointing their camera or walking through the medina.
 
 ---
 

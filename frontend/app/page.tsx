@@ -29,7 +29,7 @@ export default function LandingPage() {
               <LandmarkIcon className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
             <h1 className="text-lg md:text-xl font-bold text-gray-900">
-              Medina Navigator
+              MedinaGo
             </h1>
           </div>
           <Link
