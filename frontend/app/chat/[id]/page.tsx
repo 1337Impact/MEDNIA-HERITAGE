@@ -521,23 +521,7 @@ I couldn't find any heritage sites near your current location. This might be bec
 
       addMessage({
         type: "assistant",
-        content: `🗺️ **Heritage Exploration Route**
-      📍 **Location Source:** ${
-        locationSource === "current" ? "Current GPS" : "Previously Saved"
-      }
-
-      I've discovered ${
-        transformedSites.length
-      } magnificent heritage sites near you! Here's your personalized walking route:
-
-      **📊 Route Summary:**
-      🚶‍♂️ Total Walking: ${routeStats.totalWalkingTime} (${
-          routeStats.totalDistance
-        })
-      ⏱️ Estimated Visit Time: ${routeStats.estimatedTotalTime}
-      🎯 Sites: ${transformedSites.length} heritage locations
-
-      Click on any site below to open in Google Maps, or follow the complete itinerary! 🗺️✨`,
+        content: ``,
         heritageRoute: {
           sites: transformedSites,
           totalDistance: routeStats.totalDistance,
@@ -831,14 +815,16 @@ I'm having trouble connecting to the heritage database right now. This could be 
       {/* Moroccan Pattern Background */}
       <div className="absolute inset-0">
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-15"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23be185d' fillOpacity='0.4'%3E%3Cpath d='M30 30l15-15v30l-15-15zm0 0l-15 15h30l-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "60px 60px",
+            backgroundImage: `url("/images/zellige-pattern.png")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat"
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/90 via-rose-800/90 to-orange-900/90" />
-        <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 via-transparent to-transparent" />
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-red-900/0 via-rose-800/0 to-orange-900/0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 via-transparent to-transparent" /> */}
       </div>
 
       {/* Header with Moroccan styling */}
