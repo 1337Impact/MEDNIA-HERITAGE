@@ -366,19 +366,6 @@ export default function HomePage() {
 
     loadChatbotScript();
 
-    // Optional: Cleanup function if the component unmounts,
-    // though for a chatbot script that adds a global widget,
-    // cleanup might involve removing the widget and the script itself,
-    // which can be complex and might not be desired if navigating away and back.
-    // For this case, we'll assume the script manages its own presence.
-    // return () => {
-    //   const scriptElement = document.getElementById('highleads-chatbot-script');
-    //   if (scriptElement && scriptElement.parentNode) {
-    //     scriptElement.parentNode.removeChild(scriptElement);
-    //   }
-    //   // You might also need to remove the widget UI and any global variables set by the script
-    //   // delete window.__ch; // Be careful with this
-    // };
   }, []); // Empty dependency array means this effect runs once after initial render
 
   return (
