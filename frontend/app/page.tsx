@@ -14,24 +14,37 @@ import {
   Brain,
   Building,
 } from "lucide-react";
+import { useRouter } from "next/navigation"; // Add this import
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // --- Header Component ---
 const Header = () => {
+  const router = useRouter(); // new hook instance
+  const handleGetStarted = () => {
+    // Generate a random chat id (as a random number string)
+    const chatId = Math.floor(Math.random() * 1000000).toString();
+    router.push(`/chat/${chatId}`);
+  };
+
   return (
     <header className="w-full px-4 py-4 bg-white/80 backdrop-blur-sm border-b border-gray-100 fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-morocco-orange rounded-lg flex items-center justify-center">
-            <Building className="w-6 h-6 text-white" />
-          </div>
+          <img
+            src="/medinago.png"
+            alt="Medina Go Logo"
+            className="w-10 h-10 rounded-lg"
+          />
           <span className="text-xl font-semibold text-gray-900">
-            Medina Navigator
+            MedinaGo
           </span>
         </div>
-        <Button className="bg-morocco-orange hover:bg-morocco-orange/90 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+        <Button
+          onClick={handleGetStarted} // added handler
+          className="bg-morocco-orange hover:bg-morocco-orange/90 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+        >
           Get Started
         </Button>
       </div>
@@ -299,7 +312,7 @@ const Footer = () => {
           </nav>
           <div className="text-center text-gray-600">
             <p>
-              © {new Date().getFullYear()} Medina Navigator. All rights
+              © {new Date().getFullYear()} MedinaGo. All rights
               reserved.
             </p>
           </div>
@@ -365,7 +378,6 @@ export default function HomePage() {
     };
 
     loadChatbotScript();
-
   }, []); // Empty dependency array means this effect runs once after initial render
 
   return (
