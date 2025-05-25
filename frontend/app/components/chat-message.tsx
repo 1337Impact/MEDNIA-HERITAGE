@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, Star } from "lucide-react";
-import MarkdownPreview from '@uiw/react-markdown-preview';
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
 interface Message {
   id: string;
@@ -33,7 +33,10 @@ interface ChatMessageProps {
   isAnalyzing?: boolean;
 }
 
-export function ChatMessage({ message, isAnalyzing = false }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  isAnalyzing = false,
+}: ChatMessageProps) {
   const isUser = message.type === "user";
 
   return (
@@ -54,21 +57,21 @@ export function ChatMessage({ message, isAnalyzing = false }: ChatMessageProps) 
             />
           </div>
         )}
-
-        <div className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
-          {isUser ? (
-            message.content
-          ) : (
-            <MarkdownPreview source={message.content} style={{
-              backgroundColor: 'transparent',
-              padding: '4px',
-              color: 'inherit',
-              fontSize: 'inherit',
-              lineHeight: 'inherit',
-              fontFamily: 'inherit',
-            }} />
-          )}
-        </div>
+        {message.content && (
+          <div className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
+            <MarkdownPreview
+              source={message.content}
+              style={{
+                backgroundColor: "transparent",
+                padding: "4px",
+                color: "inherit",
+                fontSize: "inherit",
+                lineHeight: "inherit",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+        )}
 
         {message.heritageInfo && (
           <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-br from-rose-50 to-red-50 rounded-xl border border-rose-200">
@@ -131,4 +134,4 @@ export function ChatMessage({ message, isAnalyzing = false }: ChatMessageProps) 
       </div>
     </div>
   );
-} 
+}

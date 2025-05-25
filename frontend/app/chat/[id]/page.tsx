@@ -521,23 +521,7 @@ I couldn't find any heritage sites near your current location. This might be bec
 
       addMessage({
         type: "assistant",
-        content: `🗺️ **Heritage Exploration Route**
-      📍 **Location Source:** ${
-        locationSource === "current" ? "Current GPS" : "Previously Saved"
-      }
-
-      I've discovered ${
-        transformedSites.length
-      } magnificent heritage sites near you! Here's your personalized walking route:
-
-      **📊 Route Summary:**
-      🚶‍♂️ Total Walking: ${routeStats.totalWalkingTime} (${
-          routeStats.totalDistance
-        })
-      ⏱️ Estimated Visit Time: ${routeStats.estimatedTotalTime}
-      🎯 Sites: ${transformedSites.length} heritage locations
-
-      Click on any site below to open in Google Maps, or follow the complete itinerary! 🗺️✨`,
+        content: ``,
         heritageRoute: {
           sites: transformedSites,
           totalDistance: routeStats.totalDistance,
@@ -653,50 +637,6 @@ I'm having trouble connecting to the heritage database right now. This could be 
 
     setMessages((prev) => prev.filter((msg) => msg.id !== "loading"));
 
-    const mockHeritageInfo = {
-      title: "Zellige Tilework",
-      period: "10th Century - Present",
-      description:
-        "This is a magnificent example of traditional Moroccan zellige tilework. Each tile (called 'furmah') is hand-cut from clay sourced from Salé and glazed in vibrant colors, creating intricate geometric patterns that have adorned Moroccan architecture for over a millennium.",
-      significance:
-        "These geometric patterns reflect Islamic artistic principles of 'tawhid' (unity), avoiding figurative representation while creating infinite, meditative designs that symbolize the unity and continuity of creation. The mathematical precision represents divine order.",
-      location:
-        "Found throughout Moroccan palaces, mosques, riads, and traditional houses",
-      tips: [
-        "Notice how each tile is slightly different - they're all hand-cut by master craftsmen (maâlems)",
-        "The patterns create optical illusions of movement and infinity",
-        "This blue and white combination is called 'Fassi' style, originating from Fes",
-        "The imperfections are intentional - they represent human humility before divine perfection",
-      ],
-      relatedElements: [
-        "Tadelakt plaster",
-        "Cedar wood carvings",
-        "Horseshoe arches",
-      ],
-      confidence: 0.94,
-    };
-
-    addMessage({
-      type: "assistant",
-      content: `✨ **${mockHeritageInfo.title}** from **${
-        mockHeritageInfo.period
-      }**
-
-${mockHeritageInfo.description}
-
-**Cultural Significance:**
-${mockHeritageInfo.significance}
-
-**What to observe:**
-${mockHeritageInfo.tips.map((tip) => `🔹 ${tip}`).join("\n")}
-
-**Related Elements:**
-${mockHeritageInfo.relatedElements.map((element) => `• ${element}`).join("\n")}
-
-Would you like to know more about the craftsmanship process or the symbolic meaning of these specific patterns? 🎨✨`,
-      heritageInfo: mockHeritageInfo,
-    });
-
     setIsAnalyzing(false);
   };
 
@@ -771,12 +711,11 @@ Would you like to know more about the craftsmanship process or the symbolic mean
         }
       } catch (error) {
         console.error("Chat API Error:", error);
-
         addMessage({
           type: "assistant",
-          content:
-            "That's a wonderful question! I'd be delighted to help you discover more about Moroccan heritage. Feel free to share a photo of any architectural element, decorative detail, or historical site you'd like to explore, or ask me about specific aspects of what you've already discovered. 🏛️✨\n\n*Remember: Every stone, tile, and carving in Morocco tells a story of centuries-old craftsmanship and cultural heritage!*",
+          content: "Sorry, I couldn't process your message. Please try again."
         });
+
       } finally {
         setIsAnalyzing(false);
       }
@@ -787,8 +726,10 @@ Would you like to know more about the craftsmanship process or the symbolic mean
     try {
       // Create FormData
       const formData = new FormData();
-      formData.append('image', file);
-      formData.append('user_id', userId);
+      formData.append('file', file);
+      if (userId) {
+        formData.append('user_id', userId);
+      }
 
       // Add loading message
       addMessage({
@@ -812,7 +753,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
       // Add API response to chat
       addMessage({
         type: "assistant",
-        content: data.message || "Here's what I found in your image...",
+        content: data.response || "Here's what I found in your image...",
         heritageInfo: data.heritageInfo
       });
 
@@ -874,14 +815,16 @@ Would you like to know more about the craftsmanship process or the symbolic mean
       {/* Moroccan Pattern Background */}
       <div className="absolute inset-0">
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-15"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23be185d' fillOpacity='0.4'%3E%3Cpath d='M30 30l15-15v30l-15-15zm0 0l-15 15h30l-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "60px 60px",
+            backgroundImage: `url("/images/zellige-pattern.png")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat"
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/90 via-rose-800/90 to-orange-900/90" />
-        <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 via-transparent to-transparent" />
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-red-900/0 via-rose-800/0 to-orange-900/0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 via-transparent to-transparent" /> */}
       </div>
 
       {/* Header with Moroccan styling */}

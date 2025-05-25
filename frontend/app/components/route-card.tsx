@@ -140,7 +140,7 @@ export function RouteCard({ stops, totalDistance, totalWalkingTime, estimatedTot
                     href={stop.googleMapsUrl} 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700 transition-colors duration-200 bg-rose-50 px-3 py-1.5 rounded-full shadow-sm hover:shadow group"
+                    className="inline-flex items-center text-xs font-medium text-green-600 hover:text-green-700 transition-colors duration-200 bg-green-100 px-5 py-2 rounded-full shadow-sm hover:shadow group"
                   >
                     View on Map <ArrowRight className="w-3 h-3 ml-1.5 transition-transform group-hover:translate-x-0.5" />
                   </Link>
