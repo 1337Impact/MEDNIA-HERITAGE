@@ -946,7 +946,7 @@ I'm having trouble connecting to the heritage database right now. This could be 
           )}
 
           {/* Input Area */}
-          <div className="p-4 fixed bottom-0 w-full">
+          <div className="md:px-4 px-2 py-4 fixed bottom-0 w-full">
             <div className="w-full max-w-4xl mx-auto">
                <div className="flex items-end gap-2 bg-white rounded-xl shadow-lg border">
                  <div className="flex gap-1 px-2 py-2">
@@ -985,7 +985,7 @@ I'm having trouble connecting to the heritage database right now. This could be 
                      value={inputValue}
                      onChange={(e) => setInputValue(e.target.value)}
                      placeholder="Ask about Moroccan heritage..."
-                     className="flex-1 px-2 py-3 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
+                     className="flex-1 md:px-2 py-3 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                    />
                  </div>

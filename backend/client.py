@@ -199,7 +199,6 @@ class OpenAIClient:
                 ],
                 max_tokens=500
             )
-            print("OpenAI API Response:", response)
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error in analyze_image: {str(e)}")
