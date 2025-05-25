@@ -1,9 +1,11 @@
 # main.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import time
+import base64
+import asyncio
 from client import OpenAIClient
 from database import DatabaseManager
 from fastapi.middleware.cors import CORSMiddleware
@@ -162,6 +164,59 @@ async def chat_stream(request: MessageRequest):
         return StreamingResponse(generate(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.post("/analyze-image", response_model=MessageResponse)
+async def process_image(file: UploadFile = File(...), user_id: int = None):
+    try:
+        # Check file size limit (1MB = 1 * 1024 * 1024 bytes)
+        file_size = 0
+        MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB in bytes
+        
+        # Read file in chunks to get size
+        chunk_size = 1024  # 1KB chunks
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            file_size += len(chunk)
+            if file_size > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=400,
+                    detail="File size exceeds 1MB limit"
+                )
+        
+        # Reset file position for full read
+        await file.seek(0)
+        
+        # Read the image file
+        image_content = await file.read()
+        print(f"Received image: {file.filename}, size: {file_size} bytes")
+
+        # Convert to base64
+        base64_image = base64.b64encode(image_content).decode('utf-8')
+        print(f"Base64 image size: {len(base64_image)} characters")
+        print("Base64 image conversion successful")
+
+        try:
+            # Get response from OpenAI
+            ai_response = await openai_client.analyze_image(base64_image)
+            print("AI Response received successfully")
+            return MessageResponse(response=ai_response)
+        except Exception as openai_error:
+            print(f"OpenAI API Error: {str(openai_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error from OpenAI API: {str(openai_error)}"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing image: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -787,8 +787,10 @@ Would you like to know more about the craftsmanship process or the symbolic mean
     try {
       // Create FormData
       const formData = new FormData();
-      formData.append('image', file);
-      formData.append('user_id', userId);
+      formData.append('file', file);
+      if (userId) {
+        formData.append('user_id', userId);
+      }
 
       // Add loading message
       addMessage({
@@ -812,7 +814,7 @@ Would you like to know more about the craftsmanship process or the symbolic mean
       // Add API response to chat
       addMessage({
         type: "assistant",
-        content: data.message || "Here's what I found in your image...",
+        content: data.response || "Here's what I found in your image...",
         heritageInfo: data.heritageInfo
       });
 

@@ -16,10 +16,11 @@ if the user asks for a specific location, you need to provide the user with the 
 class OpenAIClient:
     def __init__(self):
         self.client = AzureOpenAI(
-            api_version="2024-12-01-preview",
+            api_version="2024-02-15-preview",
             azure_endpoint="https://highleads-01.openai.azure.com/",
             api_key=os.getenv("AZURE_OPENAI_KEY")
         )
+        self.vision_model = "gpt-4.1"
 
     async def chat_completion(self, message: str, location: str):
         response = self.client.chat.completions.create(
@@ -158,6 +159,51 @@ class OpenAIClient:
         args = json.loads(tool_call.function.arguments)
 
         return args
+
+    async def analyze_image(self, base64_image: str):
+        """Analyze an image using OpenAI's vision model."""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.vision_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a helpful assistant that analyzes images and "
+                            "provides detailed descriptions about tourist attractions, "
+                            "landmarks, and cultural sites in Morocco. Focus on "
+                            "historical significance, architectural details, and "
+                            "cultural importance."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": (
+                                    "Please analyze this image and provide detailed "
+                                    "information about what you see, focusing on its "
+                                    "historical and cultural significance if it's a "
+                                    "tourist attraction or landmark."
+                                )
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=500
+            )
+            print("OpenAI API Response:", response)
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Error in analyze_image: {str(e)}")
+            raise
 
 
 async def main():
