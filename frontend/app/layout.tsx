@@ -14,10 +14,10 @@ const notoSans = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
-  icons: "logo.png"
+  title: "Medinago",
+  description:
+    "Medinago - A platform for sharing medical knowledge and resources.",
+  icons: "medinago.png",
 };
 
 export default function RootLayout({
