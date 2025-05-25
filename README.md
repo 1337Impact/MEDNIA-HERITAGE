@@ -15,7 +15,9 @@
 
 ## 🧩 Project Overview
 
-MedinaGo blends AI technologies with Morocco’s rich cultural heritage. Users can scan landmarks, receive contextual cultural information, and navigate historical sites with curated content—simply by pointing their camera or walking through the medina.
+MedinaGo blends AI technologies with Morocco's rich cultural heritage. Users can scan landmarks, receive contextual cultural information, and navigate historical sites with curated content—simply by pointing their camera or walking through the medina.
+
+🎥 [Check out our demos and examples](/Demo-presentation)
 
 ---
 
