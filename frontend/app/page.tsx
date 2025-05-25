@@ -1,7 +1,7 @@
 // frontend/app/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react"; // Added useEffect
 import {
   MapPin,
   Star,
@@ -13,12 +13,8 @@ import {
   MessageCircle,
   Brain,
   Building,
-  // Sparkles // Only import if used. It was in the original combined component but not explicitly used in the final structure.
 } from "lucide-react";
 
-// --- UI Component Imports ---
-// IMPORTANT: Verify these paths are correct for your project structure.
-// Assumes '@' is aliased to your 'src' or 'frontend' directory.
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -71,23 +67,19 @@ const heroSectionFeaturesData = [
 const HeroSection = () => {
   return (
     <section className="morocco-gradient min-h-screen flex items-center relative overflow-hidden geometric-pattern pt-20">
-      {" "}
-      {/* pt-20 for fixed header */}
-      {/* Geometric Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 right-20 w-32 h-32 star-pattern opacity-30 animate-pulse" />
         <div className="absolute bottom-32 left-16 w-48 h-48 star-pattern opacity-20 animate-pulse delay-1000" />
         <div className="absolute top-1/2 left-1/3 w-24 h-24 star-pattern opacity-25 animate-pulse delay-500" />
       </div>
-      {/* Traditional Geometric Pattern Overlay - Ensure these images are in your /public folder */}
       <div className="absolute inset-0">
         <img
-          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png" // ADJUST PATH IF NEEDED
+          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png"
           alt="Moroccan Geometric Pattern"
           className="absolute top-10 right-10 w-32 h-32 opacity-10 animate-pulse"
         />
         <img
-          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png" // ADJUST PATH IF NEEDED (This seems to be a duplicate image, maybe one was different?)
+          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png"
           alt="Moroccan Geometric Pattern"
           className="absolute bottom-20 left-10 w-24 h-24 opacity-5 animate-pulse delay-700"
         />
@@ -101,7 +93,6 @@ const HeroSection = () => {
                 AI-Powered Cultural Navigator
               </span>
             </div>
-
             <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight pb-4">
               Discover the Hidden{" "}
               <span className="bg-gradient-to-r from-morocco-red via-morocco-gold to-morocco-teal bg-clip-text text-transparent">
@@ -114,7 +105,6 @@ const HeroSection = () => {
               navigate ancient medinas with AI guidance.
             </p>
           </div>
-
           <div className="flex flex-col sm:flex-row gap-4">
             <Button className="bg-gradient-to-r from-morocco-red to-morocco-orange hover:from-morocco-orange hover:to-morocco-gold text-white px-12 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl">
               🕌 Begin Journey
@@ -127,11 +117,10 @@ const HeroSection = () => {
             </Button>
           </div>
         </div>
-
         <div className="space-y-8 relative">
           <div className="relative mb-8">
             <img
-              src="/a1f5f943-5fb4-4a66-82af-9bdd8a2fdf06.png" // ADJUST PATH IF NEEDED
+              src="/a1f5f943-5fb4-4a66-82af-9bdd8a2fdf06.png"
               alt="Traditional Moroccan Architecture"
               className="w-full h-64 object-cover rounded-2xl shadow-2xl moroccan-card"
             />
@@ -143,7 +132,6 @@ const HeroSection = () => {
               </p>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-6">
             {heroSectionFeaturesData.map((feature, index) => (
               <Card
@@ -230,18 +218,14 @@ const FeaturesSection = () => {
         <div className="absolute bottom-20 right-20 w-32 h-32 star-pattern opacity-10" />
         <div className="absolute top-1/2 left-1/4 w-24 h-24 star-pattern opacity-8" />
       </div>
-
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-20 pb-8">
-          {/* MODIFIED THIS DIV for the badge */}
           <div className="flex mx-auto items-center justify-center space-x-3 moroccan-card px-6 py-3 rounded-full mb-6 w-max">
-            {/* w-max makes the block only as wide as its content, which helps mx-auto center it properly */}
             <Star className="w-6 h-6 text-morocco-gold animate-pulse" />
             <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">
               Advanced Cultural Intelligence
             </span>
           </div>
-
           <h2 className="text-6xl font-bold text-gray-900 mb-8">
             Where Ancient Wisdom Meets{" "}
             <span className="bg-gradient-to-r from-morocco-red via-morocco-gold to-morocco-teal bg-clip-text text-transparent">
@@ -260,7 +244,6 @@ const FeaturesSection = () => {
               className="moroccan-card p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:transform hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute top-0 right-0 w-20 h-20 star-pattern opacity-5 group-hover:opacity-10 transition-opacity" />
-
               <div className="flex flex-col items-start space-y-6">
                 <div
                   className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110`}
@@ -276,7 +259,6 @@ const FeaturesSection = () => {
                   </p>
                 </div>
               </div>
-
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-morocco-gold via-morocco-teal to-morocco-red opacity-0 group-hover:opacity-100 transition-opacity" />
             </Card>
           ))}
@@ -304,7 +286,6 @@ const Footer = () => {
             <MapPin className="w-6 h-6 text-morocco-orange" />
             <Brain className="w-6 h-6 text-morocco-orange" />
           </div>
-
           <nav className="flex flex-wrap justify-center gap-8 text-gray-600">
             {footerLinks.map((link) => (
               <a
@@ -316,7 +297,6 @@ const Footer = () => {
               </a>
             ))}
           </nav>
-
           <div className="text-center text-gray-600">
             <p>
               © {new Date().getFullYear()} Medina Navigator. All rights
@@ -331,19 +311,85 @@ const Footer = () => {
 
 // --- Main Exported Page Component ---
 export default function HomePage() {
-  // Renamed from MedinaNavigatorLandingPage to a more typical page name
+  useEffect(() => {
+    // Check if the script has already been added to avoid duplicates during HMR
+    if (document.getElementById("highleads-chatbot-script")) {
+      return;
+    }
+
+    const loadChatbotScript = async () => {
+      // @ts-ignore // To tell TypeScript that window.__ch will be defined
+      window.__ch = {
+        id: "26c87f60-03e2-4c75-addb-5f2f7e551ba8",
+        url: "https://console.highleads.co",
+      };
+
+      try {
+        const response = await fetch(
+          "https://console.highleads.co/api/chatbot/26c87f60-03e2-4c75-addb-5f2f7e551ba8"
+        );
+        if (!response.ok) {
+          console.error(
+            "Highleads API check failed:",
+            response.status,
+            response.statusText
+          );
+          return;
+        }
+
+        // Ensure the main script loader is only added once
+        if (
+          document.querySelector(
+            'script[src="https://console.highleads.co/widgets/index.js"]'
+          )
+        ) {
+          return;
+        }
+
+        var be = document.createElement("script");
+        be.id = "highleads-chatbot-script"; // Add an ID to the script
+        be.type = "text/javascript";
+        be.src = "https://console.highleads.co/widgets/index.js";
+        be.async = true; // Good practice for external scripts
+
+        var s = document.getElementsByTagName("script")[0];
+        if (s && s.parentNode) {
+          s.parentNode.insertBefore(be, s);
+        } else {
+          // Fallback if no script tag is found (less likely but safe)
+          document.head.appendChild(be);
+        }
+      } catch (error) {
+        console.error("Error loading Highleads chatbot script:", error);
+      }
+    };
+
+    loadChatbotScript();
+
+    // Optional: Cleanup function if the component unmounts,
+    // though for a chatbot script that adds a global widget,
+    // cleanup might involve removing the widget and the script itself,
+    // which can be complex and might not be desired if navigating away and back.
+    // For this case, we'll assume the script manages its own presence.
+    // return () => {
+    //   const scriptElement = document.getElementById('highleads-chatbot-script');
+    //   if (scriptElement && scriptElement.parentNode) {
+    //     scriptElement.parentNode.removeChild(scriptElement);
+    //   }
+    //   // You might also need to remove the widget UI and any global variables set by the script
+    //   // delete window.__ch; // Be careful with this
+    // };
+  }, []); // Empty dependency array means this effect runs once after initial render
+
   return (
     <div className="min-h-screen bg-background">
-      {" "}
-      {/* bg-background should be defined by your globals.css and tailwind.config.ts */}
       <Header />
       <main>
-        {" "}
-        {/* Added main tag for semantic HTML */}
         <HeroSection />
         <FeaturesSection />
       </main>
       <Footer />
+      {/* The chatbot script will append its UI to the body, so no specific placeholder needed here */}
     </div>
   );
 }
