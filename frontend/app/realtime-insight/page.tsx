@@ -378,309 +378,12 @@ const MoroccanHeritageGuide = () => {
           lastImageRef.current = imageData;
         }
       }
-
-    // When saving messages to localStorage
-    useEffect(() => {
-      if (conversation.length > 0) {
-        localStorage.setItem("messages", JSON.stringify(conversation));
-      }
-    }, [conversation]);
-
-    // New hook to automatically start the guide on page load
-    useEffect(() => {
-      startStream();
-    }, []);
-
-    return (
-      <div className="h-screen flex flex-col relative overflow-hidden">
-        {/* Moroccan Pattern Background */}
-        <div className="absolute inset-0">
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{
-              backgroundImage: `url("/images/zellige-pattern.png")`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "repeat"
-            }}
-          />
-        </div>
-
-        <div className="min-h-screen p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
-                <MapPin className="w-10 h-10 text-amber-600" />
-                Moroccan Heritage Guide
-              </h1>
-              {/* <p className="text-gray-700">
-                Explore Morocco's rich culture and traditions with AI-powered
-                guidance
-              </p> */}
-            </div>
-
-            {/* New wrapper for reordering on mobile vs. desktop with extra gap */}
-            <div className="flex flex-col gap-6">
-              <div className="order-1">
-                {/* Video Feed (Camera View) */}
-                <div className="mx-auto lg:w-1/2 bg-white/95 backdrop-blur-lg rounded-2xl p-6 border border-gray-200 shadow-lg">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Camera className="w-5 h-5" />
-                    Camera View
-                  </h2>
-                  <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                    <video
-                      ref={videoRef}
-                      className="w-full h-full object-cover"
-                      muted
-                      playsInline
-                    />
-                  </div>
-                  <canvas ref={canvasRef} className="hidden" />
-
-                  {description && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <h3 className="text-gray-800 font-medium mb-2">
-                        Current Scene:
-                      </h3>
-                      <p className="text-gray-600 text-sm">{description}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="order-2">
-                {/* Controls */}
-                <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-gray-200 shadow-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div className="hidden">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Scan Interval (ms)
-                      </label>
-                      <input
-                        type="number"
-                        value={captureInterval}
-                        onChange={(e) => setCaptureInterval(Number(e.target.value))}
-                        min="3000"
-                        max="15000"
-                        step="1000"
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                      />
-                    </div>
-
-                    <div className="hidden">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Scene Sensitivity
-                      </label>
-                      <select
-                        value={changeThreshold}
-                        onChange={(e) => setChangeThreshold(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                      >
-                        <option value={0.1}>High (Sensitive)</option>
-                        <option value={0.3}>Medium (Balanced)</option>
-                        <option value={0.5}>Low (Major changes only)</option>
-                      </select>
-                    </div>
-
-                    <div className="hidden flex items-end">
-                      <button
-                        onClick={() => setAudioEnabled(!audioEnabled)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                          audioEnabled
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-500 text-white"
-                        }`}
-                      >
-                        {audioEnabled ? (
-                          <Volume2 className="w-4 h-4" />
-                        ) : (
-                          <VolumeX className="w-4 h-4" />
-                        )}
-                        Audio {audioEnabled ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {isStreaming && (
-                    <div className="flex flex-col items-center gap-2">
-                      <button
-                        onClick={toggleListening}
-                        className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold transition-all ${
-                          isListening
-                            ? "bg-green-500 hover:bg-green-600 text-white animate-pulse"
-                            : "bg-red-500 hover:bg-red-600 text-white"
-                        }`}
-                      >
-                        {isListening ? (
-                          <MicOff className="w-5 h-5" />
-                        ) : (
-                          <Mic className="w-5 h-5" />
-                        )}
-                        {isListening ? "Stop Listening" : "Ask Questions"}
-                      </button>
-                      <p className="text-xs text-red-600 italic mt-1">
-                        Warning: This feature is not stable
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Error Display */}
-            {error && (
-              <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-4">
-                <p className="text-red-600">{error}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Text-to-speech
-  const speakText = (text) => {
-    if (!synthesisRef.current || !audioEnabled) return;
-
-    // Cancel any ongoing speech
-    synthesisRef.current.cancel();
-    setIsSpeaking(true);
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 0.8;
-
-    // Add audio completion and error handlers
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    // Don't speak if user is currently talking
-    if (!isListening || !currentTranscript) {
-      synthesisRef.current.speak(utterance);
+    } catch (err) {
+      setError(`API Error: ${err.message}`);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
-
-  // Toggle voice recognition
-  const toggleListening = () => {
-    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
-    if (!apiKey) {
-      setError("Azure OpenAI API key not configured");
-      return;
-    }
-
-    if (!recognitionRef.current) {
-      setError("Speech recognition not supported in this browser");
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      setCurrentTranscript("");
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-        setError(""); // Clear any previous errors
-      } catch (error) {
-        console.error("Failed to start speech recognition:", error);
-        setError("Failed to start voice recognition. Please try again.");
-      }
-    }
-  };
-
-  // Handle voice questions
-  const handleVoiceQuestion = async (question) => {
-    if (!question.trim()) return;
-
-    // Add a debug log for the API key
-    console.log(
-      "API Key available:",
-      !!process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY
-    ); // This will log true/false without exposing the key
-
-    const userMessage = {
-      type: "user",
-      content: question,
-      timestamp: new Date(),
-    };
-    setConversation((prev) => [...prev, userMessage]);
-
-    const currentImage = captureScreenshot();
-    if (currentImage) {
-      try {
-        await analyzeImage(currentImage, true, question);
-      } catch (error) {
-        console.error("Error analyzing voice question:", error);
-        const errorMessage = {
-          type: "assistant",
-          content: `I apologize, but I encountered an error processing your question: "${question}". Please try asking again.`,
-          timestamp: new Date(),
-        };
-        setConversation((prev) => [...prev, errorMessage]);
-      }
-    } else {
-      const noImageMessage = {
-        type: "assistant",
-        content:
-          "I need to see something through the camera to answer your question. Please make sure the camera is active and pointing at what you want to know about.",
-        timestamp: new Date(),
-      };
-      setConversation((prev) => [...prev, noImageMessage]);
-      speakText(noImageMessage.content);
-    }
-  };
-
-  // Clear conversation history
-  const clearConversation = () => {
-    localStorage.removeItem("moroccanGuideConversation");
-    setConversation([]);
-  };
-
-  // Start automatic capture and analysis
-  const startAutomaticCapture = () => {
-    intervalRef.current = setInterval(() => {
-      const imageData = captureScreenshot();
-      if (imageData && !isAnalyzing) {
-        analyzeImage(imageData);
-      }
-    }, captureInterval);
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopStream();
-    };
-  }, []);
-
-  // Update interval when changed
-  useEffect(() => {
-    if (isStreaming && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      startAutomaticCapture();
-    }
-  }, [captureInterval, isStreaming]);
-
-  // Get saved messages from localStorage
-  useEffect(() => {
-    const savedMessages = localStorage.getItem("messages");
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        // Convert timestamp strings back to Date objects
-        const messagesWithDates = parsed.map((msg) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp),
-        }));
-        setConversation(messagesWithDates);
-      } catch (error) {
-        console.error("Failed to load messages:", error);
-      }
-    }
-  }, []);
 
   // When saving messages to localStorage
   useEffect(() => {
@@ -694,134 +397,226 @@ const MoroccanHeritageGuide = () => {
     startStream();
   }, []);
 
+  // Handle voice questions from user
+  const handleVoiceQuestion = async (question) => {
+    const screenshot = captureScreenshot();
+    if (screenshot) {
+      // Add user's question to conversation
+      setConversation((prev) => [
+        ...prev,
+        { type: "user", content: question, timestamp: new Date() },
+      ]);
+      await analyzeImage(screenshot, true, question);
+    }
+  };
+
+  // Text-to-speech function
+  const speakText = (text) => {
+    if (!synthesisRef.current || !audioEnabled) return;
+
+    // Cancel any ongoing speech
+    synthesisRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9; // Slightly slower for better clarity
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error("Speech synthesis error:", event);
+      setIsSpeaking(false);
+    };
+
+    synthesisRef.current.speak(utterance);
+  };
+
+  // Toggle voice recognition
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      setError("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setError("");
+      } catch (error) {
+        console.error("Speech recognition error:", error);
+        setError("Failed to start speech recognition. Please try again.");
+      }
+    }
+  };
+
+  // Start automatic capture for scene analysis
+  const startAutomaticCapture = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(async () => {
+      if (!isAnalyzing) {
+        const screenshot = captureScreenshot();
+        if (screenshot) {
+          await analyzeImage(screenshot);
+        }
+      }
+    }, captureInterval);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
-            <MapPin className="w-10 h-10 text-yellow-400" />
-            Moroccan Heritage Guide
-          </h1>
-          <p className="text-orange-200">
-            Explore Morocco's rich culture and traditions with AI-powered
-            guidance
-          </p>
-        </div>
+    <div className="h-screen flex flex-col relative overflow-hidden">
+      {/* Moroccan Pattern Background */}
+      <div className="absolute inset-0">
+        <div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage: `url("/images/zellige-pattern.png")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat",
+          }}
+        />
+      </div>
 
-        {/* New wrapper for reordering on mobile vs. desktop with extra gap */}
-        <div className="flex flex-col gap-6">
-          <div className="order-1">
-            {/* Video Feed (Camera View) */}
-            <div className="mx-auto lg:w-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Camera className="w-5 h-5" />
-                Camera View
-              </h2>
-              <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                />
-              </div>
-              <canvas ref={canvasRef} className="hidden" />
-
-              {description && (
-                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/20">
-                  <h3 className="text-white font-medium mb-2">
-                    Current Scene:
-                  </h3>
-                  <p className="text-white/90 text-sm">{description}</p>
-                </div>
-              )}
-            </div>
+      <div className="min-h-screen p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
+              <MapPin className="w-10 h-10 text-amber-600" />
+              Moroccan Heritage Guide
+            </h1>
+            {/* <p className="text-gray-700">
+              Explore Morocco's rich culture and traditions with AI-powered
+              guidance
+            </p> */}
           </div>
-          <div className="order-2">
-            {/* Controls */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="hidden">
-                  <label className="block text-white font-medium mb-2">
-                    Scan Interval (ms)
-                  </label>
-                  <input
-                    type="number"
-                    value={captureInterval}
-                    onChange={(e) => setCaptureInterval(Number(e.target.value))}
-                    min="3000"
-                    max="15000"
-                    step="1000"
-                    className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+
+          {/* New wrapper for reordering on mobile vs. desktop with extra gap */}
+          <div className="flex flex-col gap-6">
+            <div className="order-1">
+              {/* Video Feed (Camera View) */}
+              <div className="mx-auto lg:w-1/2 bg-white/95 backdrop-blur-lg rounded-2xl p-6 border border-gray-200 shadow-lg">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Camera View
+                </h2>
+                <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
                   />
                 </div>
+                <canvas ref={canvasRef} className="hidden" />
 
-                <div className="hidden">
-                  <label className="block text-white font-medium mb-2">
-                    Scene Sensitivity
-                  </label>
-                  <select
-                    value={changeThreshold}
-                    onChange={(e) => setChangeThreshold(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  >
-                    <option value={0.1}>High (Sensitive)</option>
-                    <option value={0.3}>Medium (Balanced)</option>
-                    <option value={0.5}>Low (Major changes only)</option>
-                  </select>
-                </div>
-
-                <div className="hidden flex items-end">
-                  <button
-                    onClick={() => setAudioEnabled(!audioEnabled)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                      audioEnabled
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-500 text-white"
-                    }`}
-                  >
-                    {audioEnabled ? (
-                      <Volume2 className="w-4 h-4" />
-                    ) : (
-                      <VolumeX className="w-4 h-4" />
-                    )}
-                    Audio {audioEnabled ? "On" : "Off"}
-                  </button>
-                </div>
+                {description && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 className="text-gray-800 font-medium mb-2">
+                      Current Scene:
+                    </h3>
+                    <p className="text-gray-600 text-sm">{description}</p>
+                  </div>
+                )}
               </div>
+            </div>
+            <div className="order-2">
+              {/* Controls */}
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-gray-200 shadow-lg">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div className="hidden">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Scan Interval (ms)
+                    </label>
+                    <input
+                      type="number"
+                      value={captureInterval}
+                      onChange={(e) =>
+                        setCaptureInterval(Number(e.target.value))
+                      }
+                      min="3000"
+                      max="15000"
+                      step="1000"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
 
-              {isStreaming && (
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={toggleListening}
-                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold transition-all ${
-                      isListening
-                        ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                        : "bg-blue-500 hover:bg-blue-600 text-white"
-                    }`}
-                  >
-                    {isListening ? (
-                      <MicOff className="w-5 h-5" />
-                    ) : (
-                      <Mic className="w-5 h-5" />
-                    )}
-                    {isListening ? "Stop Listening" : "Ask Questions"}
-                  </button>
-                  <p className="text-xs text-red-500 italic mt-1">
-                    Warning: This feature is not stable
-                  </p>
+                  <div className="hidden">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Scene Sensitivity
+                    </label>
+                    <select
+                      value={changeThreshold}
+                      onChange={(e) =>
+                        setChangeThreshold(Number(e.target.value))
+                      }
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      <option value={0.1}>High (Sensitive)</option>
+                      <option value={0.3}>Medium (Balanced)</option>
+                      <option value={0.5}>Low (Major changes only)</option>
+                    </select>
+                  </div>
+
+                  <div className="hidden flex items-end">
+                    <button
+                      onClick={() => setAudioEnabled(!audioEnabled)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                        audioEnabled
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {audioEnabled ? (
+                        <Volume2 className="w-4 h-4" />
+                      ) : (
+                        <VolumeX className="w-4 h-4" />
+                      )}
+                      Audio {audioEnabled ? "On" : "Off"}
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {isStreaming && (
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={toggleListening}
+                      className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold transition-all ${
+                        isListening
+                          ? "bg-green-500 hover:bg-green-600 text-white animate-pulse"
+                          : "bg-red-500 hover:bg-red-600 text-white"
+                      }`}
+                    >
+                      {isListening ? (
+                        <MicOff className="w-5 h-5" />
+                      ) : (
+                        <Mic className="w-5 h-5" />
+                      )}
+                      {isListening ? "Stop Listening" : "Ask Questions"}
+                    </button>
+                    <p className="text-xs text-red-600 italic mt-1">
+                      Warning: This feature is not stable
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mt-6 bg-red-500/20 border border-red-500/50 rounded-2xl p-4">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
+          {/* Error Display */}
+          {error && (
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-4">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

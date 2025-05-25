@@ -1,7 +1,7 @@
 // frontend/app/page.tsx
 "use client";
 
-import React, { useEffect } from "react"; // Added useEffect
+import React, { useEffect } from "react";
 import {
   MapPin,
   Star,
@@ -14,16 +14,15 @@ import {
   Brain,
   Building,
 } from "lucide-react";
-import { useRouter } from "next/navigation"; // Add this import
+import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // --- Header Component ---
 const Header = () => {
-  const router = useRouter(); // new hook instance
+  const router = useRouter();
   const handleGetStarted = () => {
-    // Generate a random chat id (as a random number string)
     const chatId = Math.floor(Math.random() * 1000000).toString();
     router.push(`/chat/${chatId}`);
   };
@@ -33,16 +32,14 @@ const Header = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <img
-            src="/medinago.png"
+            src="/medinago.png" // Assuming this image is in your /public folder
             alt="Medina Go Logo"
             className="w-10 h-10 rounded-lg"
           />
-          <span className="text-xl font-semibold text-gray-900">
-            MedinaGo
-          </span>
+          <span className="text-xl font-semibold text-gray-900">MedinaGo</span>
         </div>
         <Button
-          onClick={handleGetStarted} // added handler
+          onClick={handleGetStarted}
           className="bg-morocco-orange hover:bg-morocco-orange/90 text-white px-6 py-2 rounded-lg font-medium transition-colors"
         >
           Get Started
@@ -87,12 +84,12 @@ const HeroSection = () => {
       </div>
       <div className="absolute inset-0">
         <img
-          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png"
+          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png" // Assuming this image is in your /public folder
           alt="Moroccan Geometric Pattern"
           className="absolute top-10 right-10 w-32 h-32 opacity-10 animate-pulse"
         />
         <img
-          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png"
+          src="/1ea2337b-ab1b-496c-a506-3551165d98f3.png" // Assuming this image is in your /public folder
           alt="Moroccan Geometric Pattern"
           className="absolute bottom-20 left-10 w-24 h-24 opacity-5 animate-pulse delay-700"
         />
@@ -133,7 +130,7 @@ const HeroSection = () => {
         <div className="space-y-8 relative">
           <div className="relative mb-8">
             <img
-              src="/a1f5f943-5fb4-4a66-82af-9bdd8a2fdf06.png"
+              src="/a1f5f943-5fb4-4a66-82af-9bdd8a2fdf06.png" // Assuming this image is in your /public folder
               alt="Traditional Moroccan Architecture"
               className="w-full h-64 object-cover rounded-2xl shadow-2xl moroccan-card"
             />
@@ -311,10 +308,7 @@ const Footer = () => {
             ))}
           </nav>
           <div className="text-center text-gray-600">
-            <p>
-              © {new Date().getFullYear()} MedinaGo. All rights
-              reserved.
-            </p>
+            <p>© {new Date().getFullYear()} MedinaGo. All rights reserved.</p>
           </div>
         </div>
       </div>
@@ -325,19 +319,20 @@ const Footer = () => {
 // --- Main Exported Page Component ---
 export default function HomePage() {
   useEffect(() => {
-    // Check if the script has already been added to avoid duplicates during HMR
+    // Check if the script has already been added to avoid duplicates during HMR or re-renders
     if (document.getElementById("highleads-chatbot-script")) {
       return;
     }
 
     const loadChatbotScript = async () => {
-      // @ts-ignore // To tell TypeScript that window.__ch will be defined
+      // @ts-ignore // To tell TypeScript that window.__ch will be defined by the external script
       window.__ch = {
         id: "26c87f60-03e2-4c75-addb-5f2f7e551ba8",
         url: "https://console.highleads.co",
       };
 
       try {
+        // This fetch is part of the original script, presumably to check API availability or some config
         const response = await fetch(
           "https://console.highleads.co/api/chatbot/26c87f60-03e2-4c75-addb-5f2f7e551ba8"
         );
@@ -347,10 +342,11 @@ export default function HomePage() {
             response.status,
             response.statusText
           );
-          return;
+          return; // Don't proceed to load the widget if the API check fails
         }
 
-        // Ensure the main script loader is only added once
+        // Ensure the main script loader is only added once, even if this effect somehow runs again.
+        // This is a secondary check to the one at the beginning of useEffect.
         if (
           document.querySelector(
             'script[src="https://console.highleads.co/widgets/index.js"]'
@@ -359,17 +355,17 @@ export default function HomePage() {
           return;
         }
 
-        var be = document.createElement("script");
-        be.id = "highleads-chatbot-script"; // Add an ID to the script
+        const be = document.createElement("script");
+        be.id = "highleads-chatbot-script"; // Add an ID for easier checking and potential removal
         be.type = "text/javascript";
         be.src = "https://console.highleads.co/widgets/index.js";
-        be.async = true; // Good practice for external scripts
+        be.async = true; // Load asynchronously to not block page rendering
 
-        var s = document.getElementsByTagName("script")[0];
+        const s = document.getElementsByTagName("script")[0];
         if (s && s.parentNode) {
           s.parentNode.insertBefore(be, s);
         } else {
-          // Fallback if no script tag is found (less likely but safe)
+          // Fallback if no script tag is found (should be rare)
           document.head.appendChild(be);
         }
       } catch (error) {
@@ -378,7 +374,14 @@ export default function HomePage() {
     };
 
     loadChatbotScript();
-  }, []); // Empty dependency array means this effect runs once after initial render
+
+    // No explicit cleanup function is defined here.
+    // The script will be loaded when this HomePage component mounts.
+    // If the component unmounts (e.g., navigating to another page), the script itself
+    // will remain in the document unless Highleads widget script has its own
+    // mechanism to remove itself or offers a JS API for uninstallation.
+    // For many third-party widgets, this behavior is standard.
+  }, []); // Empty dependency array ensures this effect runs only once after the initial render
 
   return (
     <div className="min-h-screen bg-background">
@@ -388,7 +391,8 @@ export default function HomePage() {
         <FeaturesSection />
       </main>
       <Footer />
-      {/* The chatbot script will append its UI to the body, so no specific placeholder needed here */}
+      {/* The Highleads chatbot script will typically append its UI to the document body,
+          so no specific placeholder element is usually needed here in the JSX. */}
     </div>
   );
 }
