@@ -13,9 +13,11 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 app = FastAPI()
 
+# https://linkyfire.vet/ api.linkyfire.vet
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*", "http://localhost:3000",
+                   "https://linkyfire.vet", "https://api.linkyfire.vet", "api.linkyfire.vet", "linkyfire.vet"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
